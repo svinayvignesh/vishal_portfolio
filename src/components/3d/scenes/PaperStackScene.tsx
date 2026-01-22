@@ -3,13 +3,13 @@ import { useFrame } from '@react-three/fiber';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
 // @ts-ignore
-import modelUrl from '/transformed_models/document_file_folder/document_file_folder-transformed.glb?url';
+import modelUrl from '/models/document_file_folder/document_file_folder-transformed.glb?url';
 
 interface PaperStackSceneProps {
   progress: number;
 }
 
-const PaperStackScene: React.FC<PaperStackSceneProps> = ({ progress }) => {
+const PaperStackScene: React.FC<PaperStackSceneProps> = ({ progress = 0.5 }) => {
   const groupRef = useRef<THREE.Group>(null);
   const pageRef = useRef<THREE.Mesh>(null);
 

@@ -27,7 +27,6 @@ const PrinterScene: React.FC<PrinterSceneProps> = ({ progress }) => {
   });
 
   return (
-    // Scale reduced to 2 for manageable size (was 12)
     <group ref={groupRef} position={[-0.5, -0.5, 0]} scale={[2, 2, 2]} dispose={null}>
       <mesh
         geometry={nodes.mgn12h_Material001_0.geometry}

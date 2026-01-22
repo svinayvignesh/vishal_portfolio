@@ -11,27 +11,67 @@ import AutomotiveScene from './scenes/AutomotiveScene';
 import HeroScene from './scenes/HeroScene';
 
 // Wrapper for scene transitions
+// Wrapper for scene transitions
 const SceneTransition: React.FC<{
   children: React.ReactNode;
   isActive: boolean;
-}> = ({ children, isActive }) => {
+  slideFrom?: 'left' | 'right' | 'none';
+}> = ({ children, isActive, slideFrom = 'none' }) => {
   const groupRef = useRef<THREE.Group>(null);
   const [render, setRender] = useState(isActive);
+  const { mouse } = useStore.getState(); // or useThree if accessible, but here useThree is easier inside Canvas
+  // Wait, StageManager is inside Canvas, so we use useThree hook from fiber.
+
+  // Need to import useThree if not already imported? 
+  // It is not imported in the file view I saw. I need to add it to imports.
+  // Actually, I can use state.mouse from useFrame state argument.
+
+  // Calculate target offset for active state
+  const activeOffset = slideFrom === 'right' ? 2 : (slideFrom === 'left' ? -2 : 0); // Reduced offset to keep it closer to center
+  const initialX = slideFrom === 'right' ? 12 : (slideFrom === 'left' ? -12 : 0);
 
   useEffect(() => {
-    if (isActive) setRender(true);
-  }, [isActive]);
+    if (isActive) {
+      setRender(true);
+      // SNAP TO START POSITION on activation to ensure "Slide In" always plays.
+      if (groupRef.current) {
+        groupRef.current.position.x = initialX;
+        groupRef.current.scale.set(0, 0, 0);
+      }
+    }
+  }, [isActive, initialX]);
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     if (groupRef.current) {
+      let targetX = activeOffset;
+      // If inactive, we stick to the activeOffset (don't move laterally), so we just shrink in place.
+      if (!isActive) {
+        targetX = activeOffset;
+      }
+
+      // Smooth position transition (Slide)
+      groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, targetX, delta * 2.5);
+
+      // Smooth scale transition (Fade)
+      // Active: Scale -> 1. Inactive: Scale -> 0 (Shrink)
       const targetScale = isActive ? 1 : 0;
-      const targetOpacity = isActive ? 1 : 0;
-      const speed = 4 * delta;
+      const scaleSpeed = isActive ? delta * 2 : delta * 5; // Exit faster
 
-      // Smooth scale transition
-      groupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), speed);
+      groupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), scaleSpeed);
 
-      // If scaled down to near zero and not active, stop rendering to save resources
+      // Mouse Parallax Rotation
+      // We apply this to the wrapper group.
+      // Small rotation based on mouse position (-1 to 1)
+      const mouseX = state.mouse.x;
+      const mouseY = state.mouse.y;
+
+      const targetRotY = mouseX * 0.1; // 0.1 rad is subtle
+      const targetRotX = -mouseY * 0.1;
+
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotY, delta * 2);
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX, delta * 2);
+
+      // Stop rendering if scaled down to zero
       if (!isActive && groupRef.current.scale.x < 0.01) {
         setRender(false);
       }
@@ -41,7 +81,13 @@ const SceneTransition: React.FC<{
   if (!render) return null;
 
   return (
-    <group ref={groupRef} scale={[0, 0, 0]}>
+    <group
+      ref={groupRef}
+      // STATIC initial position via prop to avoid conflict with useFrame updates.
+      // We rely on useEffect to reset it on re-entry.
+      position={[initialX, 0, 0]}
+      scale={[0, 0, 0]}
+    >
       {children}
     </group>
   );
@@ -51,22 +97,27 @@ const StageManager: React.FC = () => {
   const { activeSceneId, sectionProgress, currentSection } = useStore();
 
   // Helper to render scenes wrapped in transition
-  const renderScene = (id: string, Component: React.FC<any>) => (
-    <SceneTransition key={id} isActive={activeSceneId === id || (id === 'hero' && currentSection === 0)}>
+  const renderScene = (id: string, Component: React.FC<any>, slideFrom: 'left' | 'right' | 'none' = 'none') => (
+    <SceneTransition
+      key={id}
+      isActive={activeSceneId === id || (id === 'hero' && currentSection === 0)}
+      slideFrom={slideFrom}
+    >
       <Component progress={sectionProgress} />
     </SceneTransition>
   );
 
+  // Mapping based on Card Layout
   return (
     <group>
-      {/* We render ALL potential scenes but control their visibility/existence via SceneTransition */}
-      {renderScene('hero', HeroScene)}
-      {renderScene('paper-stack', PaperStackScene)}
-      {renderScene('3d-printer', PrinterScene)}
-      {renderScene('cnc-machine', CNCScene)}
-      {renderScene('roofing-sheets', RoofingScene)}
-      {renderScene('gas-turbine', TurbineScene)}
-      {renderScene('automotive', AutomotiveScene)}
+      {/* Hero: No slide, just scale/fade */}
+      {renderScene('hero', HeroScene, 'none')}
+      {renderScene('paper-stack', PaperStackScene, 'right')}
+      {renderScene('3d-printer', PrinterScene, 'left')}
+      {renderScene('cnc-machine', CNCScene, 'right')}
+      {renderScene('roofing-sheets', RoofingScene, 'left')}
+      {renderScene('gas-turbine', TurbineScene, 'right')}
+      {renderScene('automotive', AutomotiveScene, 'left')}
     </group>
   );
 };

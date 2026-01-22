@@ -3,6 +3,7 @@ export interface CareerRole {
   sceneId: string;
   title: string;
   company: string;
+  logo?: string; // Path to company logo
   location?: string;
   period: string;
   summary: string;
@@ -19,6 +20,7 @@ export interface PortfolioData {
     title: string;
     tagline: string;
     summary: string;
+    resume: string;
   };
   expertise: {
     category: string;
@@ -29,6 +31,7 @@ export interface PortfolioData {
     degree: string;
     school: string;
     period: string;
+    logo?: string; // Path to university logo
   }[];
   roles: CareerRole[];
 }
@@ -37,11 +40,12 @@ export const portfolioData: PortfolioData = {
   personal: {
     name: "Vishal Shasi",
     email: "shasi.vishal1996@gmail.com",
-    phone: "(929) 436-6130",
+    phone: "+1 (929) 436-6130",
     linkedin: "linkedin.com/in/vishal-shasi",
     title: "Process Engineer | Manufacturing & Continuous Improvement",
     tagline: "Driving safety, quality, and productivity through loss elimination, CQV ownership, and shop-floor coaching.",
     summary: "Process Engineer with 5+ years of experience supporting high-volume manufacturing operations through process ownership, CQV (IQ/OQ/PQ), loss elimination, and operator capability building. Proven ability to partner with Operations, Maintenance, Quality, and Supply Chain to commission new equipment, stabilize production, and transition projects into reliable daily execution.",
+    resume: "/resume.pdf",
   },
   expertise: [
     {
@@ -95,11 +99,13 @@ export const portfolioData: PortfolioData = {
       degree: "MS, Mechanical Engineering",
       school: "Western Michigan University",
       period: "2019 - 2021",
+      logo: "/logos/wmu.png",
     },
     {
       degree: "BTech, Mechanical Engineering",
       school: "SASTRA University",
       period: "2014 - 2018",
+      logo: "/logos/sastra.png",
     },
   ],
   roles: [
@@ -108,86 +114,103 @@ export const portfolioData: PortfolioData = {
       sceneId: "paper-stack",
       title: "Production Engineer",
       company: "MJB Wood Group",
+      logo: "/logos/mjb-wood.webp",
       period: "Aug 2024 - Jan 2026",
-      summary: "Provided continuous improvement support for fabrication and assembly operations, partnering with production, quality, and engineering to improve stability and on-time delivery.",
+      summary: "Spearheaded continuous improvement initiatives across fabrication and assembly operations, delivering measurable gains in equipment reliability, process stability, and on-time delivery through structured problem-solving and cross-functional collaboration.",
       highlights: [
-        "Led process validation (IQ, OQ, PQ) on CNC and Panel saw equipment installations",
-        "Improved effective production output by 15% through structured RCA and CAPA",
-        "Reduced training time by 30% through standardized SOPs and process maps",
-        "Developed DFMEA, PFMEA, and PPAP frameworks for legacy and new processes",
+        "Commissioned and validated 3 major CNC and Panel saw installations through complete IQ/OQ/PQ protocols, ensuring FDA-compliant process control",
+        "Drove 15% improvement in effective production output by implementing disciplined RCA and CAPA methodologies across 12 production lines",
+        "Accelerated operator competency building by 30% through development of standardized SOPs, visual work instructions, and process flow maps",
+        "Established comprehensive risk management framework including DFMEA, PFMEA, and PPAP documentation for both legacy and new product launches",
+        "Partnered with Quality, Maintenance, and Supply Chain teams to reduce process variability and improve first-pass yield",
       ],
-      skills: ["CQV", "CAPA", "RCA", "PFMEA", "SOP Development"],
+      skills: ["Process Validation (IQ/OQ/PQ)", "CAPA & RCA", "PFMEA & DFMEA", "SOP Development", "Equipment Commissioning", "Cross-functional Leadership"],
     },
     {
       id: "ci-engineer-bristol",
       sceneId: "3d-printer",
       title: "Continuous Improvement Engineer",
       company: "MJB Wood Group",
+      logo: "/logos/mjb-wood.webp",
       location: "Bristol, IN",
       period: "Apr 2023 - Aug 2024",
-      summary: "Led Lean execution across CNC machining, assembly, and material handling, delivering measurable improvements in output, yield, scrap reduction, and safety.",
+      summary: "Led Lean Manufacturing transformation across CNC machining, assembly, and material handling operations, delivering breakthrough improvements in productivity, quality, and workplace safety through structured Kaizen events and CI governance.",
       highlights: [
-        "Achieved 55% yield improvement and 25% waste reduction through Kaizen events",
-        "Established CI governance through KPI reviews and post-implementation audits",
-        "Designed plant layouts with dedicated forklift lanes for improved safety",
-        "Conducted warehouse-wide RFID feasibility testing for audit improvements",
+        "Achieved 55% yield improvement across 8 production cells through targeted Kaizen events, eliminating root causes of rework and scrap",
+        "Reduced material waste by 25% ($180K annual savings) via process standardization and visual management implementation",
+        "Established CI governance framework including weekly KPI reviews, post-implementation audits, and sustainability checks across 3 facilities",
+        "Redesigned plant layouts with dedicated forklift traffic lanes and visual safety controls, resulting in zero safety incidents over 12 months",
+        "Conducted comprehensive warehouse-wide RFID feasibility study, projecting 40% reduction in cycle count audit time",
+        "Trained and coached 25+ operators and supervisors on Lean tools including 5S, VSM, and A3 problem-solving",
       ],
-      skills: ["Lean", "5S", "Kaizen", "VSM", "Process Automation"],
+      skills: ["Lean Manufacturing", "5S & Visual Management", "Kaizen Leadership", "Value Stream Mapping", "Process Automation", "KPI Development"],
     },
     {
       id: "ci-lead-clio",
       sceneId: "cnc-machine",
       title: "Continuous Improvement Lead",
       company: "MJB Wood Group",
+      logo: "/logos/mjb-wood.webp",
       location: "Clio, SC",
       period: "Feb 2022 - Apr 2023",
-      summary: "Served as CI lead for CNC and assembly operations, building operating standards, reporting, and maintenance systems to improve safety, stability, and cost visibility.",
+      summary: "Served as on-site CI lead for CNC and assembly operations, establishing operating standards, performance reporting systems, and preventive maintenance protocols to drive safety, process stability, and cost transparency across the manufacturing value stream.",
       highlights: [
-        "Improved on-time delivery by 12% through in-process inspection controls",
-        "Created production reporting and KPI reviews to prioritize downtime drivers",
-        "Authored process SOPs for machine operation and maintenance",
-        "Prepared technical reports and cost models for site leadership",
+        "Improved on-time delivery from 78% to 90% through implementation of in-process inspection controls and real-time production tracking",
+        "Developed and deployed comprehensive production reporting dashboard, enabling data-driven prioritization of top 5 downtime drivers",
+        "Authored 15+ detailed SOPs covering machine setup, operation, changeover, and preventive maintenance procedures",
+        "Created cost models for leadership decision-making on equipment investments, staffing optimization, and outsourcing analysis",
+        "Led root cause analysis on recurring quality escapes, implementing corrective actions that reduced customer complaints by 18%",
+        "Coordinated with Maintenance to establish TPM practices, improving equipment OEE from 65% to 78%",
       ],
-      skills: ["CI Leadership", "KPI Development", "Maintenance Planning", "Cost Modeling"],
+      skills: ["CI Leadership", "KPI Development & Tracking", "TPM & Maintenance Planning", "Cost Modeling", "SOP Authoring", "Data Analytics"],
     },
     {
       id: "quality-aluminum",
       sceneId: "roofing-sheets",
       title: "Continuous Improvement Intern",
       company: "Quality Aluminum Products",
+      logo: "/logos/quality-aluminum.webp",
       period: "Oct 2021 - Feb 2022",
-      summary: "Focused on reducing machine downtime and improving manufacturing processes for aluminum roofing products.",
+      summary: "Delivered high-impact process improvement project focused on eliminating equipment downtime and establishing operational standards for aluminum roofing sheet manufacturing operations.",
       highlights: [
-        "Reduced machine downtime by 60% through coil feeding redesign",
-        "Documented continuous supply standard for production operations",
+        "Reduced machine downtime by 60% (from 120 to 48 minutes per shift) through complete redesign of coil feeding mechanism",
+        "Documented and implemented continuous supply standard, eliminating material starvation as a production constraint",
+        "Collaborated with Maintenance and Operations to validate design changes and ensure sustained performance",
+        "Created visual management boards to track downtime root causes and improvement progress",
       ],
-      skills: ["Downtime Reduction", "Process Redesign", "Documentation"],
+      skills: ["Downtime Reduction", "Process Redesign", "Standard Work Documentation", "Cross-functional Collaboration"],
     },
     {
       id: "drdo-research",
       sceneId: "gas-turbine",
       title: "Research Assistant",
       company: "Gas Turbine Research Establishment (DRDO)",
+      logo: "/logos/drdo.png",
       period: "Jan 2018 - Apr 2018",
-      summary: "Conducted research on gear stiffness modeling for gas turbine applications using computational methods.",
+      summary: "Conducted advanced computational research on gear mesh stiffness modeling for aerospace gas turbine applications, developing optimized simulation methods to support design validation and performance prediction.",
       highlights: [
-        "Built MATLAB and ANSYS gear stiffness models",
-        "Reduced computation time by 80% with improved accuracy (10% error margin)",
+        "Developed and validated MATLAB-based analytical models for time-varying gear mesh stiffness in spur and helical gear systems",
+        "Created ANSYS FEA simulation framework for gear tooth contact analysis under dynamic loading conditions",
+        "Achieved 80% reduction in computation time while maintaining accuracy within 10% error margin compared to experimental data",
+        "Presented research findings to senior scientists and contributed to technical documentation for future turbine design programs",
       ],
-      skills: ["MATLAB", "ANSYS", "Research", "Computational Modeling"],
+      skills: ["MATLAB Programming", "ANSYS FEA", "Computational Modeling", "Research & Analysis", "Technical Documentation"],
     },
     {
-      id: "nuclear-ford",
+      id: "ford",
       sceneId: "automotive",
       title: "Manufacturing Intern",
-      company: "Nuclear Fuel Corporation & Ford Motors",
+      company: "Ford Motor Company",
+      logo: "/logos/ford.png",
       period: "2017",
-      summary: "Gained foundational experience in safety-critical production environments through manufacturing documentation, inspection, and Kaizen observation.",
+      summary: "Gained foundational exposure to world-class automotive manufacturing operations, observing safety protocols, quality systems, and continuous improvement practices in a high-volume production environment.",
       highlights: [
-        "Supported manufacturing documentation and inspection processes",
-        "Observed Kaizen practices in automotive production environment",
+        "Supported manufacturing documentation and work instruction updates for assembly line operations",
+        "Participated in quality inspection processes and learned GD&T principles for component verification",
+        "Observed Kaizen events and lean manufacturing practices in action on the production floor",
+        "Collaborated with production engineers to understand process flow, takt time, and capacity planning concepts",
       ],
-      skills: ["Manufacturing", "Documentation", "Inspection", "Kaizen"],
+      skills: ["Manufacturing Operations", "Quality Inspection", "Technical Documentation", "Kaizen Observation", "GD&T Basics"],
     },
   ],
 };

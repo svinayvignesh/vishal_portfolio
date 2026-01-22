@@ -44,18 +44,18 @@ const SceneTransition: React.FC<{
   useFrame((state, delta) => {
     if (groupRef.current) {
       let targetX = activeOffset;
-      // If inactive, we stick to the activeOffset (don't move laterally), so we just shrink in place.
+      // When exiting, slide back out to the same side it came from
       if (!isActive) {
-        targetX = activeOffset;
+        targetX = slideFrom === 'right' ? 12 : (slideFrom === 'left' ? -12 : activeOffset);
       }
 
-      // Smooth position transition (Slide)
-      groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, targetX, delta * 2.5);
+      // Smooth position transition (Slide) - faster entry from corners
+      groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, targetX, delta * 4.0);
 
       // Smooth scale transition (Fade)
       // Active: Scale -> 1. Inactive: Scale -> 0 (Shrink)
       const targetScale = isActive ? 1 : 0;
-      const scaleSpeed = isActive ? delta * 2 : delta * 5; // Exit faster
+      const scaleSpeed = isActive ? delta * 4.0 : delta * 4.0; // Faster transition speed
 
       groupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), scaleSpeed);
 

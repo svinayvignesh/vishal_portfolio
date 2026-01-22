@@ -15,57 +15,62 @@ const ContactSection: React.FC = () => {
           </h2>
 
           <p className="text-muted-foreground mb-8 leading-relaxed">
-            I'm always open to discussing process improvement opportunities, 
+            I'm always open to discussing process improvement opportunities,
             manufacturing challenges, or potential collaborations.
           </p>
 
           <div className="space-y-4 mb-8">
-            <a 
+            <a
               href={`mailto:${personal.email}`}
-              className="flex items-center gap-4 p-4 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors group"
+              className="flex items-center gap-4 p-4 rounded-lg bg-secondary border border-transparent hover:border-primary hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer relative z-20 group"
             >
               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center group-hover:bg-primary/30 transition-colors">
                 <Mail className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <div className="text-sm text-muted-foreground">Email</div>
-                <div className="text-foreground">{personal.email}</div>
+                <div className="text-foreground transition-colors group-hover:text-primary">{personal.email}</div>
               </div>
             </a>
 
-            <a 
+            <a
               href={`tel:${personal.phone}`}
-              className="flex items-center gap-4 p-4 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors group"
+              className="flex items-center gap-4 p-4 rounded-lg bg-secondary border border-transparent hover:border-primary hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer relative z-20 group"
             >
               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center group-hover:bg-primary/30 transition-colors">
                 <Phone className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <div className="text-sm text-muted-foreground">Phone</div>
-                <div className="text-foreground">{personal.phone}</div>
+                <div className="text-foreground transition-colors group-hover:text-primary">{personal.phone}</div>
               </div>
             </a>
 
-            <a 
+            <a
               href={`https://${personal.linkedin}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-4 p-4 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors group"
+              className="flex items-center gap-4 p-4 rounded-lg bg-secondary border border-transparent hover:border-primary hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer relative z-20 group"
             >
               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center group-hover:bg-primary/30 transition-colors">
                 <Linkedin className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <div className="text-sm text-muted-foreground">LinkedIn</div>
-                <div className="text-foreground">Connect on LinkedIn</div>
+                <div className="text-foreground transition-colors group-hover:text-primary">Connect on LinkedIn</div>
               </div>
             </a>
           </div>
 
-          <button className="btn-copper w-full flex items-center justify-center gap-2">
+          <a
+            href={personal.resume}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-copper w-full flex items-center justify-center gap-2"
+          >
             <Download className="w-4 h-4" />
             Download Resume
-          </button>
+          </a>
         </div>
 
         {/* Education & Expertise */}
@@ -77,12 +82,21 @@ const ContactSection: React.FC = () => {
               Education
             </h3>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               {education.map((edu, i) => (
                 <div key={i} className="border-l-2 border-primary/30 pl-4">
-                  <div className="font-medium text-foreground">{edu.degree}</div>
-                  <div className="text-sm text-muted-foreground">{edu.school}</div>
-                  <div className="text-xs text-muted-foreground font-mono">{edu.period}</div>
+                  {edu.logo && (
+                    <img
+                      src={edu.logo}
+                      alt={edu.school}
+                      className="w-full h-auto object-contain mb-4"
+                    />
+                  )}
+                  <div>
+                    <div className="font-medium text-foreground">{edu.degree}</div>
+                    <div className="text-sm text-muted-foreground">{edu.school}</div>
+                    <div className="text-xs text-muted-foreground font-mono">{edu.period}</div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -101,16 +115,11 @@ const ContactSection: React.FC = () => {
                     {area.category}
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {area.skills.slice(0, 5).map((skill, j) => (
+                    {area.skills.map((skill, j) => (
                       <span key={j} className="badge-industrial text-xs">
                         {skill}
                       </span>
                     ))}
-                    {area.skills.length > 5 && (
-                      <span className="badge-industrial text-xs opacity-60">
-                        +{area.skills.length - 5} more
-                      </span>
-                    )}
                   </div>
                 </div>
               ))}

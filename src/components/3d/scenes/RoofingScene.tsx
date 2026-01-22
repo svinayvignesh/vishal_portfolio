@@ -1,13 +1,57 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 // @ts-ignore
 import modelUrl from '/models/aluminum_furnace/schaefer_gas_aluminum_furnace-transformed.glb?url';
 
 const RoofingScene: React.FC = () => {
   const groupRef = useRef<THREE.Group>(null);
+  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+
   // Load the model
   const { nodes, materials } = useGLTF(modelUrl) as any;
+
+  // Track mouse position
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      setMouse({
+        x: (event.clientX / window.innerWidth) * 2 - 1,
+        y: -(event.clientY / window.innerHeight) * 2 + 1,
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  // Mouse tracking and floating animation
+  useFrame((state) => {
+    const elapsed = state.clock.elapsedTime;
+
+    if (groupRef.current) {
+      // Base rotation values
+      const baseRotationX = 0.2792526803190927;
+
+      // Mouse-based rotation (subtle)
+      const targetRotationY = mouse.x * 0.2;
+      const targetRotationX = baseRotationX + mouse.y * 0.15;
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(
+        groupRef.current.rotation.y,
+        targetRotationY,
+        0.05
+      );
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(
+        groupRef.current.rotation.x,
+        targetRotationX,
+        0.05
+      );
+
+      // Floating effect
+      const floatY = Math.sin(elapsed * 0.5) * 0.08;
+      groupRef.current.position.y = -1.5 + floatY;
+    }
+  });
 
   return (
     <group ref={groupRef} dispose={null} scale={0.5} position={[0, -1.5, 0]} rotation={[0.2792526803190927, 0, 0]}>

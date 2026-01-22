@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
@@ -9,10 +9,26 @@ import modelUrl from '/models/document_file_folder/document_file_folder-transfor
 const PaperStackScene: React.FC = () => {
   const groupRef = useRef<THREE.Group>(null);
   const pageRef = useRef<THREE.Mesh>(null);
+  const reverseStartTimeRef = useRef<number | null>(null);
+  const reverseStartValueRef = useRef<number>(0);
+  const [mouse, setMouse] = useState({ x: 0, y: 0 });
 
   // Load optimized model with animations
   const { nodes, materials, animations } = useGLTF(modelUrl) as any;
   const { actions, names } = useAnimations(animations, groupRef);
+
+  // Track mouse position
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      setMouse({
+        x: (event.clientX / window.innerWidth) * 2 - 1,
+        y: -(event.clientY / window.innerHeight) * 2 + 1,
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   // Initialize animation for scroll-driven control
   useEffect(() => {
@@ -35,19 +51,14 @@ const PaperStackScene: React.FC = () => {
     if (!action) return;
     const clip = action.getClip();
 
-    // Subscribe to activeSceneId and force-open when this scene activates
+    // Subscribe to activeSceneId and handle activation/deactivation
     const unsubscribe = useStore.subscribe(
-      (s) => s.activeSceneId,
-      (activeSceneId) => {
-        if (activeSceneId === 'paper-stack') {
-          if (clip) {
-            // Set to clip midpoint (assumes open state is near the middle of the clip)
-            action.time = clip.duration * 0.5;
-          }
-          if (pageRef.current) {
-            // lift page fully (match liftFactor = 1)
-            pageRef.current.position.y = 0.032 + 0.3;
-          }
+      (state) => {
+        const activeSceneId = state.activeSceneId;
+        if (activeSceneId !== 'paper-stack') {
+          // Scene becomes inactive - prepare to reverse
+          reverseStartValueRef.current = action.time;
+          reverseStartTimeRef.current = null;
         }
       }
     );
@@ -56,20 +67,59 @@ const PaperStackScene: React.FC = () => {
   }, [actions, names]);
 
   useFrame((state) => {
-    const progress = useStore.getState().sectionProgress;
+    const { sectionProgress: progress, activeSceneId } = useStore.getState();
+    const isSceneActive = activeSceneId === 'paper-stack';
+    const elapsed = state.clock.elapsedTime;
 
     if (groupRef.current) {
-      // Gentle floating animation
-      const floatY = Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
+      // Mouse-based rotation (subtle, applied to base rotation)
+      const baseRotationX = 0.9;
+      const baseRotationY = 0.2;
+      const baseRotationZ = 0.15;
+
+      const targetRotationY = baseRotationY + mouse.x * 0.15;
+      const targetRotationX = baseRotationX + mouse.y * 0.1;
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(
+        groupRef.current.rotation.y,
+        targetRotationY,
+        0.05
+      );
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(
+        groupRef.current.rotation.x,
+        targetRotationX,
+        0.05
+      );
+
+      // Gentle floating animation (combined with existing)
+      const floatY = Math.sin(elapsed * 0.3) * 0.1;
       groupRef.current.position.y = floatY;
 
-      // Scroll-driven animation scrubbing (full range)
       if (names.length > 0) {
         const action = actions[names[0]];
         if (action) {
-          // Map progress (0 to 1) to full animation duration (0 to 1)
-          const clamped = Math.min(Math.max(progress, 0), 1);
-          action.time = action.getClip().duration * clamped;
+          const clip = action.getClip();
+          if (!clip) return;
+
+          if (isSceneActive) {
+            // Scroll-driven animation: directly map scroll progress to folder opening (0-50%)
+            const clamped = Math.min(Math.max(progress, 0), 0.5);
+            action.time = clip.duration * clamped;
+          } else {
+            // Scene is inactive - reverse animation from current position to 0
+            if (reverseStartValueRef.current > 0) {
+              if (reverseStartTimeRef.current === null) {
+                reverseStartTimeRef.current = elapsed;
+              }
+              const timeSinceReverseStart = elapsed - reverseStartTimeRef.current;
+              const reverseDuration = 1.5; // Take 1.5 seconds to reverse
+              const t = Math.min(timeSinceReverseStart, reverseDuration) / reverseDuration;
+              action.time = reverseStartValueRef.current * (1 - t);
+
+              if (t >= 1) {
+                reverseStartValueRef.current = 0;
+              }
+            }
+          }
         }
       }
 
@@ -84,7 +134,7 @@ const PaperStackScene: React.FC = () => {
           if (clip && clip.duration > 0) {
             const normalized = THREE.MathUtils.clamp(action.time / clip.duration, 0, 1);
             // Triangular waveform: 0 at 0, 1 at 0.5, 0 at 1
-            liftFactor = Math.max(0, 1 - Math.abs((normalized * 2) - 1));
+            liftFactor = Math.max(0, 1 - Math.abs((normalized * 1.5) - 1));
           }
         } else {
           // Fallback: use progress after 40% like before

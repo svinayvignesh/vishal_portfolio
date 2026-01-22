@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -8,6 +8,8 @@ import modelUrl from '/models/resin_3d_printer/resin_3d_printer-transformed.glb?
 
 const PrinterScene: React.FC = () => {
   const groupRef = useRef<THREE.Group>(null);
+  const lightRef = useRef<THREE.PointLight>(null);
+  const [mouse, setMouse] = useState({ x: 0, y: 0 });
 
   // Refs for individual meshes to animate
   const mesh1Ref = useRef<THREE.Mesh>(null);
@@ -18,6 +20,19 @@ const PrinterScene: React.FC = () => {
   // Load optimized model
   const { nodes, materials } = useGLTF(modelUrl) as any;
 
+  // Track mouse position
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      setMouse({
+        x: (event.clientX / window.innerWidth) * 2 - 1,
+        y: -(event.clientY / window.innerHeight) * 2 + 1,
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
   // Base positions
   const basePositions = {
     mesh1: { y: 0.228 },
@@ -26,51 +41,87 @@ const PrinterScene: React.FC = () => {
     mesh4: { y: -0.052 },
   };
 
-  // Animate meshes based on scroll progress
-  useFrame(() => {
-    const rawProgress = useStore.getState().sectionProgress;
+  // Animate meshes based on scroll progress, plus mouse tracking and floating
+  useFrame((state) => {
+    const elapsed = state.clock.elapsedTime;
+    const { sectionProgress: rawProgress, activeSceneId } = useStore.getState();
+    const isSceneActive = activeSceneId === '3d-printer';
 
     // Only start animation halfway through scroll (remap 0.5-1.0 to 0-1)
     const progress = rawProgress < 0.5 ? 0 : (rawProgress - 0.5) * 2;
 
-    // Mesh 3 (capac): moves UP from 0.187 to 0.5
-    if (mesh3Ref.current) {
-      const targetY = THREE.MathUtils.lerp(basePositions.mesh3.y, 0.5, progress);
-      mesh3Ref.current.position.y = THREE.MathUtils.lerp(
-        mesh3Ref.current.position.y,
-        targetY,
-        0.1
-      );
+    // Only animate meshes when scene is active
+    if (isSceneActive) {
+      // Mesh 3 (capac): moves UP from 0.187 to 0.5
+      if (mesh3Ref.current) {
+        const targetY = THREE.MathUtils.lerp(basePositions.mesh3.y, 0.5, progress);
+        mesh3Ref.current.position.y = THREE.MathUtils.lerp(
+          mesh3Ref.current.position.y,
+          targetY,
+          0.1
+        );
+      }
+
+      // Other meshes: move DOWN (negative y direction)
+      const downOffset = progress * 0.15; // How far they move down
+
+      if (mesh1Ref.current) {
+        const targetY = basePositions.mesh1.y - downOffset;
+        mesh1Ref.current.position.y = THREE.MathUtils.lerp(
+          mesh1Ref.current.position.y,
+          targetY,
+          0.1
+        );
+      }
+
+      if (mesh2Ref.current) {
+        const targetY = basePositions.mesh2.y - downOffset;
+        mesh2Ref.current.position.y = THREE.MathUtils.lerp(
+          mesh2Ref.current.position.y,
+          targetY,
+          0.1
+        );
+      }
+
+      if (mesh4Ref.current) {
+        const targetY = basePositions.mesh4.y - downOffset;
+        mesh4Ref.current.position.y = THREE.MathUtils.lerp(
+          mesh4Ref.current.position.y,
+          targetY,
+          0.1
+        );
+      }
     }
 
-    // Other meshes: move DOWN (negative y direction)
-    const downOffset = progress * 0.15; // How far they move down
-
-    if (mesh1Ref.current) {
-      const targetY = basePositions.mesh1.y - downOffset;
-      mesh1Ref.current.position.y = THREE.MathUtils.lerp(
-        mesh1Ref.current.position.y,
-        targetY,
-        0.1
+    // Mouse tracking and floating on group
+    if (groupRef.current) {
+      // Mouse-based rotation (subtle)
+      const targetRotationY = mouse.x * 0.2;
+      const targetRotationX = mouse.y * 0.15;
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(
+        groupRef.current.rotation.y,
+        targetRotationY,
+        0.05
       );
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(
+        groupRef.current.rotation.x,
+        targetRotationX,
+        0.05
+      );
+
+      // Floating effect
+      const floatY = Math.sin(elapsed * 0.5) * 0.05;
+      groupRef.current.position.y = -1.5 + floatY;
     }
 
-    if (mesh2Ref.current) {
-      const targetY = basePositions.mesh2.y - downOffset;
-      mesh2Ref.current.position.y = THREE.MathUtils.lerp(
-        mesh2Ref.current.position.y,
-        targetY,
-        0.1
-      );
-    }
+    // Animate light y position from -0.14 to 0.25
+    if (lightRef.current) {
+      const targetY = THREE.MathUtils.lerp(-0.14, 0.25, rawProgress);
+      lightRef.current.position.y = targetY;
 
-    if (mesh4Ref.current) {
-      const targetY = basePositions.mesh4.y - downOffset;
-      mesh4Ref.current.position.y = THREE.MathUtils.lerp(
-        mesh4Ref.current.position.y,
-        targetY,
-        0.1
-      );
+      // Fade intensity in and out based on whether scene is active
+      const targetIntensity = isSceneActive ? 1000 * rawProgress : 0;
+      lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, targetIntensity, 0.1);
     }
   });
 
@@ -109,6 +160,7 @@ const PrinterScene: React.FC = () => {
       {/* Ambient lighting specific to this object to highlight details */}
       <pointLight position={[2, 2, 2]} intensity={0.5} color="#4a90a4" />
       <pointLight position={[-2, 1, 2]} intensity={0.3} color="#d4a574" />
+      <pointLight ref={lightRef} position={[0.14, -0.14, 0.29]} intensity={0} color={"#ffffff"} />
     </group>
   );
 };

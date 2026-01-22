@@ -1,10 +1,50 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { Float } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 const HeroScene: React.FC = () => {
   const groupRef = useRef<THREE.Group>(null);
   const particlesRef = useRef<THREE.Points>(null);
+  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+
+  // Track mouse position
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      setMouse({
+        x: (event.clientX / window.innerWidth) * 2 - 1,
+        y: -(event.clientY / window.innerHeight) * 2 + 1,
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  // Animate the entire group based on mouse and time
+  useFrame((state) => {
+    const elapsed = state.clock.elapsedTime;
+
+    if (groupRef.current) {
+      // Mouse-based rotation (subtle)
+      const targetRotationY = mouse.x * 0.15;
+      const targetRotationX = mouse.y * 0.1;
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(
+        groupRef.current.rotation.y,
+        targetRotationY,
+        0.05
+      );
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(
+        groupRef.current.rotation.x,
+        targetRotationX,
+        0.05
+      );
+
+      // Group-level floating effect
+      const floatY = Math.sin(elapsed * 0.4) * 0.1;
+      groupRef.current.position.y = floatY;
+    }
+  });
 
   // Create floating geometric shapes representing engineering precision
   const shapes = useMemo(() => {

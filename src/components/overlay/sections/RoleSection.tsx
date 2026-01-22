@@ -12,9 +12,22 @@ const RoleSection: React.FC<RoleSectionProps> = ({ role, index }) => {
 
   return (
     <div className={`w-full max-w-6xl mx-auto px-6 py-20 ${isEven ? 'md:pr-[40%]' : 'md:pl-[40%]'}`}>
-      <div className="card-steel p-8 md:p-10">
+      <div className="card-steel p-8 md:p-10 relative overflow-hidden">
+        {/* Logo watermark background */}
+        {role.logo && (
+          <div className="absolute top-4 right-4 w-32 h-32 opacity-[0.5] pointer-events-none">
+            <img
+              src={role.logo}
+              alt=""
+              className="w-full h-full object-contain"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          </div>
+        )}
         {/* Role header */}
-        <div className="mb-6">
+        <div className="mb-6 relative z-10">
           {/* Index badge */}
           <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-accent text-accent-foreground font-mono font-bold mb-4">
             {String(index + 1).padStart(2, '0')}
@@ -25,9 +38,20 @@ const RoleSection: React.FC<RoleSectionProps> = ({ role, index }) => {
           </h2>
 
           <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-2.5">
+              {role.logo && (
+                <img
+                  src={role.logo}
+                  alt={`${role.company} logo`}
+                  className="w-7 h-7 object-contain rounded"
+                  onError={(e) => {
+                    // Hide image if it fails to load
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              )}
               <Briefcase className="w-4 h-4" />
-              {role.company}
+              <span className="font-medium">{role.company}</span>
             </span>
             {role.location && (
               <span className="flex items-center gap-2">
@@ -43,12 +67,12 @@ const RoleSection: React.FC<RoleSectionProps> = ({ role, index }) => {
         </div>
 
         {/* Summary */}
-        <p className="text-muted-foreground mb-6 leading-relaxed">
+        <p className="text-muted-foreground mb-6 leading-relaxed relative z-10">
           {role.summary}
         </p>
 
         {/* Highlights */}
-        <div className="mb-6">
+        <div className="mb-6 relative z-10">
           <h4 className="text-sm font-mono text-primary uppercase tracking-wider mb-3">
             Key Achievements
           </h4>
@@ -63,14 +87,14 @@ const RoleSection: React.FC<RoleSectionProps> = ({ role, index }) => {
         </div>
 
         {/* Skills */}
-        <div>
+        <div className="relative z-10">
           <h4 className="text-sm font-mono text-primary uppercase tracking-wider mb-3">
             Skills Applied
           </h4>
           <div className="flex flex-wrap gap-2">
             {role.skills.map((skill, i) => (
-              <span 
-                key={i} 
+              <span
+                key={i}
                 className="badge-industrial"
               >
                 {skill}

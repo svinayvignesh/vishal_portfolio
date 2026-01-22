@@ -1,19 +1,73 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 // @ts-ignore
 import modelUrl from '/models/cnc_machine/cnc_machine-transformed.glb?url';
 
 const CNCScene: React.FC = () => {
   const groupRef = useRef<THREE.Group>(null);
+  const lightRef = useRef<THREE.PointLight>(null);
+  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+
   //Load the model
   const { nodes, materials } = useGLTF(modelUrl) as any;
+
+  // Track mouse position
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      setMouse({
+        x: (event.clientX / window.innerWidth) * 2 - 1,
+        y: -(event.clientY / window.innerHeight) * 2 + 1,
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  // Animate light color, mouse tracking, and floating
+  useFrame((state) => {
+    const elapsed = state.clock.elapsedTime;
+
+    // Light color cycling
+    if (lightRef.current) {
+      const hue = (elapsed * 0.3) % 1;
+      const color = new THREE.Color();
+      color.setHSL(hue, 1, 0.6);
+      lightRef.current.color.copy(color);
+    }
+
+    // Mouse tracking and floating
+    if (groupRef.current) {
+      // Mouse-based rotation (subtle)
+      const targetRotationY = -0.4 + mouse.x * 0.3;
+      const targetRotationX = mouse.y * 0.2;
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(
+        groupRef.current.rotation.y,
+        targetRotationY,
+        0.05
+      );
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(
+        groupRef.current.rotation.x,
+        targetRotationX,
+        0.05
+      );
+
+      // Floating effect
+      const floatY = Math.sin(elapsed * 0.5) * 0.1;
+      groupRef.current.position.y = -2.3 + floatY;
+    }
+  });
 
   return (
     <group ref={groupRef} dispose={null} position={[0.3, -2.3, 0]} scale={1.5} rotation={[0, -0.4, 0]}>
       <mesh geometry={nodes.Object_5.geometry} material={materials.PaletteMaterial001} position={[-0.491, 2.149, -0.06]} rotation={[-Math.PI, 0, Math.PI / 2]} scale={0.025} />
       <mesh geometry={nodes.Object_302.geometry} material={materials.PaletteMaterial002} position={[0.563, 1.375, 1.233]} scale={0.025} />
       <mesh geometry={nodes.Object_322.geometry} material={materials.M_14___Default} position={[1.569, 1.044, 1.947]} rotation={[1.857, 0.445, 0.971]} scale={0.025} />
+
+      {/* Point light for CNC machine detail - color changes over time */}
+      <pointLight ref={lightRef} position={[-0.46, 1.77, 0.236136437489527]} intensity={10} color={"#eae206"} scale={0} />
     </group>
   );
 };

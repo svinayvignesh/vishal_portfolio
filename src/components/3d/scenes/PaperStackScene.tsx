@@ -1,120 +1,86 @@
-import React, { useRef, useMemo, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { useGLTF, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
+// @ts-ignore
+import modelUrl from '/transformed_models/document_file_folder/document_file_folder-transformed.glb?url';
 
 interface PaperStackSceneProps {
   progress: number;
 }
 
-// Paper plane component representing ISO documents
-const PaperPlane: React.FC<{
-  initialPosition: THREE.Vector3;
-  initialRotation: THREE.Euler;
-  targetPosition: THREE.Vector3;
-  targetRotation: THREE.Euler;
-  progress: number;
-  index: number;
-}> = ({ initialPosition, initialRotation, targetPosition, targetRotation, progress, index }) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  useFrame(() => {
-    if (meshRef.current) {
-      // Lerp position based on scroll progress
-      meshRef.current.position.lerpVectors(initialPosition, targetPosition, progress);
-      
-      // Lerp rotation
-      meshRef.current.rotation.x = THREE.MathUtils.lerp(initialRotation.x, targetRotation.x, progress);
-      meshRef.current.rotation.y = THREE.MathUtils.lerp(initialRotation.y, targetRotation.y, progress);
-      meshRef.current.rotation.z = THREE.MathUtils.lerp(initialRotation.z, targetRotation.z, progress);
-    }
-  });
-
-  return (
-    <mesh ref={meshRef} position={initialPosition} castShadow receiveShadow>
-      {/* Thin box to represent paper/document */}
-      <boxGeometry args={[2, 0.02, 2.8]} />
-      <meshStandardMaterial
-        color="#f5f5f0"
-        metalness={0.1}
-        roughness={0.8}
-        side={THREE.DoubleSide}
-      />
-    </mesh>
-  );
-};
-
-// Document lines texture simulation
-const DocumentLines: React.FC<{ position: [number, number, number] }> = ({ position }) => {
-  return (
-    <group position={position}>
-      {[0, 1, 2, 3, 4].map((i) => (
-        <mesh key={i} position={[0, 0.015, -0.8 + i * 0.4]}>
-          <boxGeometry args={[1.6, 0.005, 0.05]} />
-          <meshBasicMaterial color="#cccccc" />
-        </mesh>
-      ))}
-    </group>
-  );
-};
-
 const PaperStackScene: React.FC<PaperStackSceneProps> = ({ progress }) => {
   const groupRef = useRef<THREE.Group>(null);
 
-  // Define scattered positions and final stacked positions
-  const papers = useMemo(() => {
-    const count = 6;
-    return Array.from({ length: count }, (_, i) => ({
-      initialPosition: new THREE.Vector3(
-        (Math.random() - 0.5) * 8,
-        (Math.random() - 0.5) * 6,
-        (Math.random() - 0.5) * 4 - 2
-      ),
-      initialRotation: new THREE.Euler(
-        Math.random() * Math.PI,
-        Math.random() * Math.PI,
-        Math.random() * Math.PI
-      ),
-      targetPosition: new THREE.Vector3(0, -1.5 + i * 0.15, 0),
-      targetRotation: new THREE.Euler(0, 0, (Math.random() - 0.5) * 0.1),
-    }));
-  }, []);
+  // Load optimized model
+  const { nodes, materials, animations } = useGLTF(modelUrl) as any;
+  const { actions, names } = useAnimations(animations, groupRef);
+
+  useEffect(() => {
+    if (names.length > 0) {
+      const action = actions[names[0]];
+      if (action) {
+        action.reset();
+        action.setLoop(THREE.LoopOnce, 1);
+        action.clampWhenFinished = true;
+        action.paused = true; // Pause immediately to control via scroll
+        action.play(); // Play must be called to activate the action, but it's paused
+      }
+    }
+  }, [actions, names]);
 
   useFrame((state) => {
     if (groupRef.current) {
       // Gentle floating animation
-      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.2) * 0.05;
+      // X-axis: 0 (centered)
+      // Y-axis: moves up and down slightly (floating)
+      // Z-axis: 0 (default depth)
+      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.2) * 0.1;
+      groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
+
+      // Scroll-driven animation scrubbing
+      if (names.length > 0) {
+        const action = actions[names[0]];
+        if (action) {
+          // Map progress (0 to 1) to animation duration
+          action.time = action.getClip().duration * Math.min(Math.max(progress, 0), 1);
+        }
+      }
+
+      // Scroll-driven rotation (open towards camera)
+      groupRef.current.rotation.y += progress * (Math.PI / 4);
+      // Tilt slightly forward as it opens
+      groupRef.current.rotation.x = progress * (Math.PI / 8);
     }
   });
 
   return (
-    <group ref={groupRef} position={[0, 0, -3]}>
-      {/* Paper planes */}
-      {papers.map((paper, i) => (
-        <PaperPlane
-          key={i}
-          index={i}
-          progress={progress}
-          initialPosition={paper.initialPosition}
-          initialRotation={paper.initialRotation}
-          targetPosition={paper.targetPosition}
-          targetRotation={paper.targetRotation}
+    // Scale reduced to 1.5 to be less dominant
+    <group ref={groupRef} position={[0, -0.5, 0]} scale={[1.5, 1.5, 1.5]} dispose={null}>
+      <group name="Sketchfab_Scene">
+        <mesh
+          name="A4_Page3Shape_2_0"
+          geometry={nodes.A4_Page3Shape_2_0.geometry}
+          material={materials.A4_Page3Shape}
+          position={[0, 0.032, 4.06]}
         />
-      ))}
-
-      {/* Platform/desk surface */}
-      <mesh position={[0, -2, 0]} receiveShadow>
-        <boxGeometry args={[5, 0.2, 4]} />
-        <meshStandardMaterial
-          color="#2a3a4a"
-          metalness={0.4}
-          roughness={0.6}
+        <mesh
+          name="Folder_1Shape"
+          geometry={nodes.Folder_1Shape.geometry}
+          material={materials.Folder_1Shape}
+          morphTargetDictionary={nodes.Folder_1Shape.morphTargetDictionary}
+          morphTargetInfluences={nodes.Folder_1Shape.morphTargetInfluences}
+          position={[0, -0.068, 4.06]}
         />
-      </mesh>
+      </group>
 
-      {/* Ambient particles */}
-      <pointLight position={[2, 3, 2]} intensity={0.5} color="#d4a574" />
+      {/* Ambient particles specific to this object */}
+      <pointLight position={[2, 2, 2]} intensity={1.0} color="#d4a574" />
     </group>
   );
 };
+
+// Preload the specific model path
+useGLTF.preload(modelUrl);
 
 export default PaperStackScene;

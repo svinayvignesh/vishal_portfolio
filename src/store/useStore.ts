@@ -14,7 +14,7 @@ interface ScrollState {
   activeSceneId: string;
   // Total number of sections
   totalSections: number;
-  
+
   // Actions
   setCurrentSection: (section: number) => void;
   setSectionProgress: (progress: number) => void;
@@ -28,10 +28,17 @@ export const useStore = create<ScrollState>((set) => ({
   sectionProgress: 0,
   totalProgress: 0,
   isScrolling: false,
-  activeSceneId: portfolioData.roles[0]?.sceneId || 'paper-stack',
+  activeSceneId: 'hero', // Start with hero scene by default
   totalSections: portfolioData.roles.length + 2, // roles + hero + contact
-  
+
   setCurrentSection: (section) => {
+    // If we are in the Hero section (section 0), explicitly set active scene to 'hero'
+    // This hides the role-specific scenes like 'paper-stack'
+    if (section === 0) {
+      set({ currentSection: section, activeSceneId: 'hero' });
+      return;
+    }
+
     const roleIndex = section - 1; // Account for hero section
     const sceneId = portfolioData.roles[roleIndex]?.sceneId || 'paper-stack';
     set({ currentSection: section, activeSceneId: sceneId });

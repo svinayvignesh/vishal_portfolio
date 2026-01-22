@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,8 +8,6 @@
    Inspired by: Steel mills, CNC machines, precision engineering
    Palette: Deep charcoal, steel blue, copper/bronze accents
 */
-
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -81,22 +81,33 @@
     --sidebar-ring: 210 60% 50%;
   }
 
-  /* Light mode override (optional, keeping dark as default) */
+  /* Light mode override - Beige/Cream Theme */
   .light {
-    --background: 210 20% 98%;
-    --foreground: 220 20% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
-    --primary: 210 60% 45%;
+    --background: 40 33% 92%;
+    /* #F5F1E6 - Soft Beige */
+    --foreground: 220 20% 15%;
+    /* #1e2329 - Soft Charcoal for text */
+
+    --card: 40 40% 96%;
+    /* #F9F6F0 - Lighter Beige */
+    --card-foreground: 220 20% 15%;
+
+    --primary: 25 80% 45%;
+    /* Copper/Rust primary */
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 15% 92%;
+
+    --secondary: 40 25% 88%;
+    /* #EBE7DC */
     --secondary-foreground: 220 15% 25%;
-    --muted: 210 12% 90%;
-    --muted-foreground: 215 15% 45%;
+
+    --muted: 40 20% 85%;
+    --muted-foreground: 215 15% 40%;
+
     --accent: 25 80% 50%;
     --accent-foreground: 25 10% 98%;
-    --border: 210 15% 85%;
-    --input: 210 15% 88%;
+
+    --border: 40 20% 80%;
+    --input: 40 20% 88%;
   }
 }
 
@@ -107,6 +118,8 @@
 
   html {
     scroll-behavior: smooth;
+    /* Enforce Card View snapping */
+    scroll-snap-type: y mandatory;
   }
 
   body {
@@ -134,10 +147,14 @@
 }
 
 @layer components {
+
   /* Section styling */
   .section-panel {
     @apply min-h-screen flex items-center justify-center relative;
     background: var(--gradient-hero);
+    /* Ensure section snaps to start */
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
   }
 
   /* Card with steel border effect */
@@ -179,7 +196,7 @@
   /* Glow text effect */
   .text-glow {
     text-shadow: 0 0 20px hsl(var(--primary) / 0.5),
-                 0 0 40px hsl(var(--primary) / 0.3);
+      0 0 40px hsl(var(--primary) / 0.3);
   }
 
   /* Industrial badge */
@@ -231,13 +248,12 @@
   /* Timeline connector */
   .timeline-line {
     @apply absolute left-0 top-0 bottom-0 w-px;
-    background: linear-gradient(180deg, 
-      transparent 0%, 
-      hsl(var(--steel)) 10%, 
-      hsl(var(--primary)) 50%, 
-      hsl(var(--steel)) 90%, 
-      transparent 100%
-    );
+    background: linear-gradient(180deg,
+        transparent 0%,
+        hsl(var(--steel)) 10%,
+        hsl(var(--primary)) 50%,
+        hsl(var(--steel)) 90%,
+        transparent 100%);
   }
 
   .timeline-dot {
@@ -254,6 +270,7 @@
 }
 
 @layer utilities {
+
   /* Animation utilities */
   .animate-fade-up {
     animation: fadeUp 0.6s ease-out forwards;
@@ -272,6 +289,7 @@
       opacity: 0;
       transform: translateY(30px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -279,28 +297,50 @@
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
   }
 
   @keyframes glowPulse {
-    0%, 100% {
+
+    0%,
+    100% {
       box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
     }
+
     50% {
       box-shadow: 0 0 40px hsl(var(--primary) / 0.5);
     }
   }
 
   /* Stagger children animations */
-  .stagger-children > * {
+  .stagger-children>* {
     opacity: 0;
     animation: fadeUp 0.5s ease-out forwards;
   }
 
-  .stagger-children > *:nth-child(1) { animation-delay: 0.1s; }
-  .stagger-children > *:nth-child(2) { animation-delay: 0.2s; }
-  .stagger-children > *:nth-child(3) { animation-delay: 0.3s; }
-  .stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
-  .stagger-children > *:nth-child(5) { animation-delay: 0.5s; }
+  .stagger-children>*:nth-child(1) {
+    animation-delay: 0.1s;
+  }
+
+  .stagger-children>*:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .stagger-children>*:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+
+  .stagger-children>*:nth-child(4) {
+    animation-delay: 0.4s;
+  }
+
+  .stagger-children>*:nth-child(5) {
+    animation-delay: 0.5s;
+  }
 }

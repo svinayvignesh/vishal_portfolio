@@ -57,19 +57,19 @@ const ScrollOverlay: React.FC = () => {
   return (
     <div ref={containerRef} className="relative z-10">
       {/* Hero Section */}
-      <section className="scroll-section min-h-screen flex items-center justify-center">
+      <section className="scroll-section min-h-screen flex items-center justify-center snap-start snap-always">
         <HeroSection />
       </section>
 
       {/* Role Sections */}
       {portfolioData.roles.map((role, index) => (
-        <section key={role.id} className="scroll-section min-h-screen flex items-center">
+        <section key={role.id} className="scroll-section min-h-screen flex items-center snap-start snap-always">
           <RoleSection role={role} index={index} />
         </section>
       ))}
 
       {/* Contact Section */}
-      <section className="scroll-section min-h-screen flex items-center justify-center">
+      <section className="scroll-section min-h-screen flex items-center justify-center snap-start snap-always">
         <ContactSection />
       </section>
     </div>

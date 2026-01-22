@@ -1,6 +1,9 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+// @ts-ignore
+import modelUrl from '/transformed_models/resin_3d_printer/resin_3d_printer-transformed.glb?url';
 
 interface PrinterSceneProps {
   progress: number;
@@ -8,100 +11,58 @@ interface PrinterSceneProps {
 
 const PrinterScene: React.FC<PrinterSceneProps> = ({ progress }) => {
   const groupRef = useRef<THREE.Group>(null);
-  const nozzleRef = useRef<THREE.Group>(null);
-  const printedObjectRef = useRef<THREE.Mesh>(null);
+
+  // Load optimized model
+  const { nodes, materials } = useGLTF(modelUrl) as any;
 
   useFrame((state) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.1) * 0.1;
-    }
-
-    // Nozzle movement - moves in a pattern as user scrolls
-    if (nozzleRef.current) {
-      const time = state.clock.elapsedTime;
-      nozzleRef.current.position.x = Math.sin(time * 2) * 0.5;
-      nozzleRef.current.position.z = Math.cos(time * 2) * 0.5;
-    }
-
-    // Scale up printed object based on progress (reveal effect)
-    if (printedObjectRef.current) {
-      printedObjectRef.current.scale.y = Math.max(0.01, progress);
-      printedObjectRef.current.position.y = -1.5 + (progress * 1.5);
+      // Gentle floating animation
+      // X-axis: 0 (centered)
+      // Y-axis: oscillation for floating effect
+      // Z-axis: 0 (default depth)
+      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.2) * 0.1 + (progress * Math.PI / 4);
+      groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
     }
   });
 
   return (
-    <group ref={groupRef} position={[0, 0, -3]}>
-      {/* Printer Frame */}
-      <group>
-        {/* Vertical posts */}
-        {[[-2, -2], [2, -2], [-2, 2], [2, 2]].map(([x, z], i) => (
-          <mesh key={i} position={[x, 0, z]}>
-            <boxGeometry args={[0.15, 5, 0.15]} />
-            <meshStandardMaterial color="#3a4a5a" metalness={0.7} roughness={0.3} />
-          </mesh>
-        ))}
+    // Scale reduced to 2 for manageable size (was 12)
+    <group ref={groupRef} position={[-0.5, -0.5, 0]} scale={[2, 2, 2]} dispose={null}>
+      <mesh
+        geometry={nodes.mgn12h_Material001_0.geometry}
+        material={materials.PaletteMaterial001}
+        position={[0, 0.228, 0.007]}
+        rotation={[-Math.PI / 2, Math.PI / 2, 0]}
+        scale={1.25}
+      />
+      <mesh
+        geometry={nodes.baza_lcd_0.geometry}
+        material={materials.material}
+        position={[0, -0.008, 0.095]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      />
+      <mesh
+        geometry={nodes.capac_Material029_0.geometry}
+        material={materials.PaletteMaterial002}
+        position={[0, 0.187, 0.095]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      />
+      <mesh
+        geometry={nodes.BUTTON_Material004_0.geometry}
+        material={materials.PaletteMaterial003}
+        position={[0.048, -0.052, 0.191]}
+        scale={0.001}
+      />
 
-        {/* Top frame */}
-        <mesh position={[0, 2.5, 0]}>
-          <boxGeometry args={[4.3, 0.15, 4.3]} />
-          <meshStandardMaterial color="#3a4a5a" metalness={0.7} roughness={0.3} />
-        </mesh>
-      </group>
-
-      {/* Moving Gantry with Nozzle */}
-      <group ref={nozzleRef} position={[0, 1.5, 0]}>
-        {/* Gantry arm */}
-        <mesh position={[0, 0, 0]}>
-          <boxGeometry args={[3, 0.2, 0.3]} />
-          <meshStandardMaterial color="#4a90a4" metalness={0.6} roughness={0.4} />
-        </mesh>
-
-        {/* Nozzle (cone shape) */}
-        <mesh position={[0, -0.3, 0]} rotation={[Math.PI, 0, 0]}>
-          <coneGeometry args={[0.15, 0.4, 16]} />
-          <meshStandardMaterial color="#d4a574" metalness={0.8} roughness={0.2} emissive="#ff6600" emissiveIntensity={0.3} />
-        </mesh>
-
-        {/* Hot end glow */}
-        <pointLight position={[0, -0.4, 0]} intensity={0.5} color="#ff6600" distance={2} />
-      </group>
-
-      {/* Build Platform */}
-      <mesh position={[0, -2.2, 0]} receiveShadow>
-        <boxGeometry args={[3.5, 0.3, 3.5]} />
-        <meshStandardMaterial color="#2a3a4a" metalness={0.5} roughness={0.5} />
-      </mesh>
-
-      {/* Printed Object - Mechanical Part (revealed from bottom up) */}
-      <mesh ref={printedObjectRef} position={[0, -1.5, 0]} castShadow>
-        <cylinderGeometry args={[0.8, 1, 3, 6]} />
-        <meshStandardMaterial
-          color="#4a90a4"
-          metalness={0.4}
-          roughness={0.6}
-        />
-      </mesh>
-
-      {/* Decorative gear on top of printed object */}
-      <mesh position={[0, progress * 1.5 - 0.5, 0]} scale={[1, 1, 1]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.4, 0.1, 8, 6]} />
-        <meshStandardMaterial color="#d4a574" metalness={0.7} roughness={0.3} />
-      </mesh>
-
-      {/* Filament spool */}
-      <group position={[3, 1, 0]}>
-        <mesh rotation={[0, 0, Math.PI / 2]}>
-          <cylinderGeometry args={[0.6, 0.6, 0.3, 32]} />
-          <meshStandardMaterial color="#4a90a4" metalness={0.3} roughness={0.7} />
-        </mesh>
-        <mesh rotation={[0, 0, Math.PI / 2]}>
-          <torusGeometry args={[0.5, 0.08, 8, 32]} />
-          <meshStandardMaterial color="#5aa0b4" metalness={0.2} roughness={0.8} />
-        </mesh>
-      </group>
+      {/* Ambient lighting specific to this object to highlight details */}
+      <pointLight position={[2, 2, 2]} intensity={0.5} color="#4a90a4" />
+      <pointLight position={[-2, 1, 2]} intensity={0.3} color="#d4a574" />
     </group>
   );
 };
+
+// Preload the specific model path
+useGLTF.preload(modelUrl);
 
 export default PrinterScene;

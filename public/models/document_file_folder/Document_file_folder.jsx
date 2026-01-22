@@ -18,8 +18,8 @@ export function Model(props) {
   return (
     <group ref={group} {...props} dispose={null}>
       <group name="Sketchfab_Scene">
-        <mesh name="A4_Page3Shape_2_0" geometry={nodes.A4_Page3Shape_2_0.geometry} material={materials.A4_Page3Shape} />
-        <mesh name="Folder_1Shape" geometry={nodes.Folder_1Shape.geometry} material={materials.Folder_1Shape} morphTargetDictionary={nodes.Folder_1Shape.morphTargetDictionary} morphTargetInfluences={nodes.Folder_1Shape.morphTargetInfluences} />
+        <mesh name="A4_Page3Shape_2_0" geometry={nodes.A4_Page3Shape_2_0.geometry} material={materials.A4_Page3Shape} position={[0, 0.032, 0.06]} />
+        <mesh name="Folder_1Shape" geometry={nodes.Folder_1Shape.geometry} material={materials.Folder_1Shape} morphTargetDictionary={nodes.Folder_1Shape.morphTargetDictionary} morphTargetInfluences={nodes.Folder_1Shape.morphTargetInfluences} position={[0, -0.068, 0.06]} />
       </group>
     </group>
   )

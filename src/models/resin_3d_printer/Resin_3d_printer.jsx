@@ -15,10 +15,10 @@ export function Model(props) {
   const { nodes, materials } = useGLTF('/resin_3d_printer-transformed.glb')
   return (
     <group {...props} dispose={null}>
-      <mesh geometry={nodes.mgn12h_Material001_0.geometry} material={materials.PaletteMaterial001} position={[0, 0.228, 0.007]} rotation={[-Math.PI / 2, Math.PI / 2, 0]} scale={1.25} />
-      <mesh geometry={nodes.baza_lcd_0.geometry} material={materials.material} position={[0, -0.008, 0.095]} rotation={[-Math.PI / 2, 0, 0]} />
-      <mesh geometry={nodes.capac_Material029_0.geometry} material={materials.PaletteMaterial002} position={[0, 0.187, 0.095]} rotation={[-Math.PI / 2, 0, 0]} />
-      <mesh geometry={nodes.BUTTON_Material004_0.geometry} material={materials.PaletteMaterial003} position={[0.048, -0.052, 0.191]} scale={0.001} />
+      <mesh geometry={nodes.mgn12h_Material001_0.geometry} material={materials.PaletteMaterial001} />
+      <mesh geometry={nodes.baza_lcd_0.geometry} material={materials.material} />
+      <mesh geometry={nodes.capac_Material029_0.geometry} material={materials.PaletteMaterial002} />
+      <mesh geometry={nodes.BUTTON_Material004_0.geometry} material={materials.PaletteMaterial003} />
     </group>
   )
 }

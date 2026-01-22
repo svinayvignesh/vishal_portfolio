@@ -110,8 +110,8 @@ const StageManager: React.FC = () => {
   // Mapping based on Card Layout
   return (
     <group>
-      {/* Hero: No slide, just scale/fade */}
-      {renderScene('hero', HeroScene, 'none')}
+      {/* Hero: Always visible in background */}
+      <HeroScene />
       {renderScene('paper-stack', PaperStackScene, 'right')}
       {renderScene('3d-printer', PrinterScene, 'left')}
       {renderScene('cnc-machine', CNCScene, 'right')}

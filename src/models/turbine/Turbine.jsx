@@ -19,7 +19,7 @@ export function Model(props) {
     <group ref={group} {...props} dispose={null}>
       <group name="Sketchfab_Scene">
         <group name="turbine_01_obj">
-          <group name="hull_turbine" position={[2.048, 0, 0]}>
+          <group name="hull_turbine">
             <mesh name="hull_turbine_Plastic-Black-PBR_0" geometry={nodes['hull_turbine_Plastic-Black-PBR_0'].geometry} material={materials.PaletteMaterial001} />
           </group>
           <group name="blades_turbine_003">

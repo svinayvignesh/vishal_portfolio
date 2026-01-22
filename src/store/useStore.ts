@@ -32,15 +32,16 @@ export const useStore = create<ScrollState>((set) => ({
   totalSections: portfolioData.roles.length + 2, // roles + hero + contact
 
   setCurrentSection: (section) => {
-    // If we are in the Hero section (section 0), explicitly set active scene to 'hero'
-    // This hides the role-specific scenes like 'paper-stack'
-    if (section === 0) {
+    // If we are in the Hero section (section 0) or Contact section (last section),
+    // show only the hero scene
+    const totalSections = portfolioData.roles.length + 2; // roles + hero + contact
+    if (section === 0 || section >= totalSections - 1) {
       set({ currentSection: section, activeSceneId: 'hero' });
       return;
     }
 
     const roleIndex = section - 1; // Account for hero section
-    const sceneId = portfolioData.roles[roleIndex]?.sceneId || 'paper-stack';
+    const sceneId = portfolioData.roles[roleIndex]?.sceneId || 'hero';
     set({ currentSection: section, activeSceneId: sceneId });
   },
   setSectionProgress: (progress) => set({ sectionProgress: progress }),

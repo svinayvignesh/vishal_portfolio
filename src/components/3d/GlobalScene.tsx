@@ -3,9 +3,12 @@ import { Canvas } from '@react-three/fiber';
 import { Preload, Environment } from '@react-three/drei';
 import StageManager from './StageManager';
 
+import { useIsMobile } from '@/hooks/use-mobile';
+
 const GlobalScene: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isDark = true;
+  const isMobile = useIsMobile();
 
   return (
     <div
@@ -18,7 +21,7 @@ const GlobalScene: React.FC = () => {
       }}
     >
       <Canvas
-        camera={{ position: [0, 0, 10], fov: 50 }}
+        camera={{ position: [0, 0, isMobile ? 14 : 10], fov: 50 }}
         dpr={[1, 2]}
         gl={{
           antialias: true,

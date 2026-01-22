@@ -12,6 +12,8 @@ import HeroScene from './scenes/HeroScene';
 
 // Wrapper for scene transitions
 // Wrapper for scene transitions
+import { useIsMobile } from '@/hooks/use-mobile';
+
 const SceneTransition: React.FC<{
   children: React.ReactNode;
   isActive: boolean;
@@ -19,15 +21,13 @@ const SceneTransition: React.FC<{
 }> = ({ children, isActive, slideFrom = 'none' }) => {
   const groupRef = useRef<THREE.Group>(null);
   const [render, setRender] = useState(isActive);
-  const { mouse } = useStore.getState(); // or useThree if accessible, but here useThree is easier inside Canvas
-  // Wait, StageManager is inside Canvas, so we use useThree hook from fiber.
 
-  // Need to import useThree if not already imported? 
-  // It is not imported in the file view I saw. I need to add it to imports.
-  // Actually, I can use state.mouse from useFrame state argument.
+  const isMobile = useIsMobile();
 
   // Calculate target offset for active state
-  const activeOffset = slideFrom === 'right' ? 2 : (slideFrom === 'left' ? -2 : 0); // Reduced offset to keep it closer to center
+  // On mobile, always center the model (0). On desktop, use the side offset.
+  const activeOffset = isMobile ? 0 : (slideFrom === 'right' ? 2 : (slideFrom === 'left' ? -2 : 0));
+
   const initialX = slideFrom === 'right' ? 12 : (slideFrom === 'left' ? -12 : 0);
 
   useEffect(() => {

@@ -160,9 +160,18 @@
   /* Card with steel border effect */
   .card-steel {
     @apply relative overflow-hidden rounded-lg;
-    background: var(--gradient-card);
+    /* Mobile: transparent background to show 3D models */
+    background: linear-gradient(145deg, hsl(220 18% 14% / 0.01), hsl(220 18% 10% / 0.01));
+    backdrop-filter: blur(4px);
     border: 1px solid hsl(var(--border));
     box-shadow: var(--shadow-card);
+  }
+
+  @media (min-width: 768px) {
+    .card-steel {
+      background: var(--gradient-card);
+      backdrop-filter: none;
+    }
   }
 
   .card-steel::before {

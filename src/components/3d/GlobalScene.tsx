@@ -1,30 +1,11 @@
-import React, { Suspense, useRef, useEffect, useState } from 'react';
+import React, { Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Preload, Environment } from '@react-three/drei';
 import StageManager from './StageManager';
-import { useTheme } from '../theme-provider';
 
 const GlobalScene: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { theme } = useTheme();
-  // State to track the ACTUAL active theme (resolving 'system')
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');
-
-  useEffect(() => {
-    if (theme === 'system') {
-      const systemHandler = (e: MediaQueryListEvent) => {
-        setResolvedTheme(e.matches ? 'dark' : 'light');
-      };
-      const matcher = window.matchMedia('(prefers-color-scheme: dark)');
-      setResolvedTheme(matcher.matches ? 'dark' : 'light');
-      matcher.addEventListener('change', systemHandler);
-      return () => matcher.removeEventListener('change', systemHandler);
-    } else {
-      setResolvedTheme(theme as 'light' | 'dark');
-    }
-  }, [theme]);
-
-  const isDark = resolvedTheme === 'dark';
+  const isDark = true;
 
   return (
     <div

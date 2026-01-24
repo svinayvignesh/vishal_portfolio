@@ -27,6 +27,9 @@ const SceneTransition: React.FC<{
 
   const isMobile = useIsMobile();
 
+  // Gyroscope state for mobile devices
+  const gyroRef = useRef({ x: 0, y: 0 });
+
   // Calculate target offset for active state
   // On mobile, always center the model (0). On desktop, use the side offset.
   const activeOffset = isMobile ? 0 : (slideFrom === 'right' ? 2 : (slideFrom === 'left' ? -2 : 0));
@@ -43,6 +46,41 @@ const SceneTransition: React.FC<{
       }
     }
   }, [isActive, initialX]);
+
+  // Setup gyroscope listener for mobile devices
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      // beta: front-back tilt (-180 to 180), gamma: left-right tilt (-90 to 90)
+      const beta = event.beta || 0; // Front-back tilt
+      const gamma = event.gamma || 0; // Left-right tilt
+
+      // Normalize to -1 to 1 range, similar to pointer
+      // Clamp and scale beta (tilt forward/back) to reasonable range
+      gyroRef.current.y = Math.max(-1, Math.min(1, beta / 45)); // -45 to 45 degrees
+      // Clamp and scale gamma (tilt left/right) to reasonable range
+      gyroRef.current.x = Math.max(-1, Math.min(1, gamma / 45)); // -45 to 45 degrees
+    };
+
+    // Request permission for iOS 13+
+    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+      (DeviceOrientationEvent as any).requestPermission()
+        .then((permissionState: string) => {
+          if (permissionState === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation);
+          }
+        })
+        .catch(console.error);
+    } else {
+      // Non-iOS or older iOS
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+
+    return () => {
+      window.removeEventListener('deviceorientation', handleOrientation);
+    };
+  }, [isMobile]);
 
   useFrame((state, delta) => {
     if (groupRef.current) {
@@ -64,10 +102,19 @@ const SceneTransition: React.FC<{
       targetScaleVec.current.set(targetScale, targetScale, targetScale);
       groupRef.current.scale.lerp(targetScaleVec.current, scaleSpeed);
 
-      // Mouse Parallax Rotation - ONLY when scene is active for performance
+      // Parallax Rotation - Use gyroscope on mobile, mouse on desktop
       if (isActive) {
-        const targetRotY = state.pointer.x * 0.1; // 0.1 rad is subtle
-        const targetRotX = -state.pointer.y * 0.1;
+        let targetRotY, targetRotX;
+
+        if (isMobile) {
+          // Use gyroscope data on mobile
+          targetRotY = gyroRef.current.x * 0.1; // 0.1 rad is subtle
+          targetRotX = -gyroRef.current.y * 0.1;
+        } else {
+          // Use mouse pointer on desktop
+          targetRotY = state.pointer.x * 0.1;
+          targetRotX = -state.pointer.y * 0.1;
+        }
 
         groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotY, delta * 2);
         groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX, delta * 2);
@@ -102,6 +149,9 @@ const StageManager: React.FC = () => {
   const [stableActiveSceneId, setStableActiveSceneId] = useState(activeSceneId);
   const debounceTimerRef = useRef<number>();
 
+  // Warmup state - preload first scene on mount to compile shaders
+  const [warmedUp, setWarmedUp] = useState(false);
+
   useEffect(() => {
     clearTimeout(debounceTimerRef.current);
     debounceTimerRef.current = window.setTimeout(() => {
@@ -110,6 +160,15 @@ const StageManager: React.FC = () => {
 
     return () => clearTimeout(debounceTimerRef.current);
   }, [activeSceneId]);
+
+  // Warmup: Force mount first scene briefly to compile shaders
+  useEffect(() => {
+    const warmupTimer = setTimeout(() => {
+      setWarmedUp(true);
+    }, 100); // Brief warmup period
+
+    return () => clearTimeout(warmupTimer);
+  }, []);
 
   // Scene order for determining which scenes to mount (hero removed - now using BackgroundCanvas)
   const sceneOrder = ['paper-stack', '3d-printer', 'cnc-machine', 'roofing-sheets', 'gas-turbine', 'automotive'];
@@ -123,7 +182,9 @@ const StageManager: React.FC = () => {
     const sceneIndex = sceneOrder.indexOf(id);
 
     // Mount scenes within distance of 1 from active scene
-    const shouldMount = Math.abs(sceneIndex - activeIndex) <= 1;
+    // During warmup, force mount first scene to compile shaders
+    const isWarmupScene = !warmedUp && id === 'paper-stack';
+    const shouldMount = isWarmupScene || Math.abs(sceneIndex - activeIndex) <= 1;
 
     if (!shouldMount) return null;
 

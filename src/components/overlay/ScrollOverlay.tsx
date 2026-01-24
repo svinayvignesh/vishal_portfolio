@@ -6,6 +6,7 @@ import { portfolioData } from '@/data/portfolioData';
 import HeroSection from './sections/HeroSection';
 import RoleSection from './sections/RoleSection';
 import ContactSection from './sections/ContactSection';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger);
@@ -13,6 +14,7 @@ gsap.registerPlugin(ScrollTrigger);
 const ScrollOverlay: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { setCurrentSection, setSectionProgress, setTotalProgress, totalSections } = useStore();
+  const isMobile = useIsMobile();
 
   useLayoutEffect(() => {
     const container = containerRef.current;
@@ -61,11 +63,25 @@ const ScrollOverlay: React.FC = () => {
         <HeroSection />
       </section>
 
-      {/* Role Sections */}
+      {/* Role Sections - On mobile: alternating content and 3D space */}
       {portfolioData.roles.map((role, index) => (
-        <section key={role.id} className="scroll-section min-h-screen flex items-center snap-start snap-always">
-          <RoleSection role={role} index={index} />
-        </section>
+        <React.Fragment key={role.id}>
+          {/* Experience Card Section */}
+          <section className="scroll-section min-h-screen flex items-center snap-start snap-always">
+            <RoleSection role={role} index={index} isMobile={isMobile} />
+          </section>
+
+          {/* 3D Model Section - Only on mobile, appears after each experience */}
+          {isMobile && (
+            <section
+              className="scroll-section min-h-screen flex items-center justify-center snap-start snap-always"
+              data-scene-index={index}
+            >
+              {/* Empty section for 3D model to be visible (positioned fixed behind) */}
+              <div className="w-full h-full" />
+            </section>
+          )}
+        </React.Fragment>
       ))}
 
       {/* Contact Section */}

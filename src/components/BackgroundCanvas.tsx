@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import { useStore } from '@/store/useStore';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Particle {
     x: number;
@@ -229,12 +230,14 @@ const BackgroundCanvas: React.FC = () => {
     const boltsRef = useRef<MechanicalBolt[]>([]);
     const springsRef = useRef<MechanicalSpring[]>([]);
     const mouseRef = useRef({ x: 0.5, y: 0.5 });
+    const gyroRef = useRef({ x: 0.5, y: 0.5 }); // Gyroscope data for mobile
     const scrollRef = useRef(0);
     const lastScrollRef = useRef(0);
     const scrollSpeedMultiplierRef = useRef(1); // Smoothly interpolated multiplier
     const lastFrameTimeRef = useRef(0);
     const dprRef = useRef(1);
     const timeRef = useRef(0);
+    const isMobile = useIsMobile();
 
     // Get quality settings for adaptive performance
     const qualitySettings = useStore((state) => state.qualitySettings);
@@ -293,52 +296,71 @@ const BackgroundCanvas: React.FC = () => {
             };
         });
 
-        // Initialize mechanical gears distributed across the canvas
-        // More gears, larger sizes, better distribution
-        gearsRef.current = Array.from({ length: 20 }, (_, index) => {
-            const baseSpeed = (Math.random() - 0.5) * 0.002;
-            return {
-                x: 0,
-                y: 0,
-                baseX: (index % 5) * (width / 5) + (Math.random() - 0.5) * 120,
-                baseY: Math.floor(index / 5) * (height / 4) + (Math.random() - 0.5) * 120,
-                radius: 35 + Math.random() * 55, // Larger gears
-                teeth: 10 + Math.floor(Math.random() * 14),
-                rotation: Math.random() * Math.PI * 2,
-                rotationSpeed: baseSpeed,
-                baseRotationSpeed: baseSpeed,
-                angularVelocity: 0, // Start stationary
-                alpha: 0.5 + Math.random() * 0.35, // More visible
-                type: (['spur', 'helical', 'planetary'] as const)[Math.floor(Math.random() * 3)],
-            };
-        });
+        // Initialize mechanical gears with fixed positions for mobile stability
+        const gearPositions = [
+            { x: width * 0.15, y: height * 0.20, radius: 70, teeth: 12, type: 'spur' as const, speed: 0.001 },
+            { x: width * 0.75, y: height * 0.35, radius: 60, teeth: 14, type: 'planetary' as const, speed: -0.0012 },
+            { x: width * 0.40, y: height * 0.65, radius: 55, teeth: 16, type: 'helical' as const, speed: 0.0015 },
+            { x: width * 0.85, y: height * 0.75, radius: 65, teeth: 10, type: 'spur' as const, speed: -0.0008 },
+            { x: width * 0.20, y: height * 0.85, radius: 50, teeth: 12, type: 'planetary' as const, speed: 0.001 },
+        ];
 
-        // Initialize bolts scattered across canvas
-        boltsRef.current = Array.from({ length: 30 }, () => {
-            const baseSpeed = (Math.random() - 0.5) * 0.001;
-            return {
-                x: 0,
-                y: 0,
-                baseX: Math.random() * width,
-                baseY: Math.random() * height,
-                size: 8 + Math.random() * 10, // Larger bolts
-                alpha: 0.3 + Math.random() * 0.4,
-                rotation: Math.random() * Math.PI * 2,
-                rotationSpeed: baseSpeed,
-                baseRotationSpeed: baseSpeed,
-                angularVelocity: 0,
-            };
-        });
-
-        // Initialize springs
-        springsRef.current = Array.from({ length: 15 }, () => ({
+        gearsRef.current = gearPositions.map((pos) => ({
             x: 0,
             y: 0,
-            baseX: Math.random() * width,
-            baseY: Math.random() * height,
-            length: 40 + Math.random() * 60,
-            rotation: Math.random() * Math.PI * 2,
-            alpha: 0.25 + Math.random() * 0.3,
+            baseX: pos.x,
+            baseY: pos.y,
+            radius: pos.radius,
+            teeth: pos.teeth,
+            rotation: 0,
+            rotationSpeed: pos.speed,
+            baseRotationSpeed: pos.speed,
+            angularVelocity: 0,
+            alpha: 0.6,
+            type: pos.type,
+        }));
+
+        // Initialize bolts with fixed positions for mobile stability
+        const boltPositions = [
+            { x: width * 0.25, y: height * 0.15, size: 12 },
+            { x: width * 0.60, y: height * 0.25, size: 14 },
+            { x: width * 0.50, y: height * 0.50, size: 10 },
+            { x: width * 0.15, y: height * 0.60, size: 16 },
+            { x: width * 0.70, y: height * 0.70, size: 11 },
+            { x: width * 0.90, y: height * 0.45, size: 13 },
+            { x: width * 0.35, y: height * 0.90, size: 12 },
+        ];
+
+        boltsRef.current = boltPositions.map((pos, i) => ({
+            x: 0,
+            y: 0,
+            baseX: pos.x,
+            baseY: pos.y,
+            size: pos.size,
+            alpha: 0.4,
+            rotation: 0,
+            rotationSpeed: (i % 2 === 0 ? 0.0001 : -0.0001),
+            baseRotationSpeed: (i % 2 === 0 ? 0.00005 : -0.00005),
+            angularVelocity: 0,
+        }));
+
+        // Initialize springs with fixed positions
+        const springPositions = [
+            { x: width * 0.10, y: height * 0.40, length: 60, rotation: 0.3 },
+            { x: width * 0.55, y: height * 0.15, length: 70, rotation: 1.2 },
+            { x: width * 0.30, y: height * 0.75, length: 50, rotation: 2.1 },
+            { x: width * 0.80, y: height * 0.60, length: 65, rotation: 0.8 },
+            { x: width * 0.65, y: height * 0.85, length: 55, rotation: 1.7 },
+        ];
+
+        springsRef.current = springPositions.map((pos) => ({
+            x: 0,
+            y: 0,
+            baseX: pos.x,
+            baseY: pos.y,
+            length: pos.length,
+            rotation: pos.rotation,
+            alpha: 0.3,
         }));
     }, [targetFPS, colors.primary, colors.accent, colors.subtle, colors.dark, colors.star]);
 
@@ -446,9 +468,11 @@ const BackgroundCanvas: React.FC = () => {
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, width, height);
 
-        // Mouse parallax offset
-        const mouseOffsetX = (mouseRef.current.x - 0.5) * 30;
-        const mouseOffsetY = (mouseRef.current.y - 0.5) * 20;
+        // Parallax offset - use gyroscope on mobile, mouse on desktop
+        const inputX = isMobile ? gyroRef.current.x : mouseRef.current.x;
+        const inputY = isMobile ? gyroRef.current.y : mouseRef.current.y;
+        const mouseOffsetX = (inputX - 0.5) * 30;
+        const mouseOffsetY = (inputY - 0.5) * 20;
 
         // Scroll parallax offset
         const scrollOffset = scrollRef.current * 0.1;
@@ -523,32 +547,36 @@ const BackgroundCanvas: React.FC = () => {
         // Update time for rotation
         timeRef.current += 0.02;
 
-        // Calculate scroll velocity for dynamic rotation speed
+        // Calculate scroll direction and velocity
         const currentScroll = scrollRef.current;
-        const scrollDelta = Math.abs(currentScroll - lastScrollRef.current);
+        const scrollDiff = currentScroll - lastScrollRef.current; // Positive = scrolling down, Negative = scrolling up
+        const scrollDelta = Math.abs(scrollDiff);
+        const scrollDirection = scrollDiff > 0 ? 1 : -1; // 1 for down, -1 for up
         lastScrollRef.current = currentScroll;
-        const targetScrollSpeedMultiplier = 1 + Math.min(scrollDelta * 0.05, 4); // Up to 5x speed on scroll
+
+        // Very gentle speed multiplier for smooth rotation
+        const targetScrollSpeedMultiplier = 1 + Math.min(scrollDelta * 0.01, 0.5); // Max 1.5x speed, much slower
 
         // Smooth interpolation: gradually return to normal speed when scrolling stops
-        const lerpFactor = scrollDelta > 0 ? 0.15 : 0.05; // Fast acceleration, slow deceleration
+        const lerpFactor = scrollDelta > 0 ? 0.08 : 0.03; // Slower acceleration and deceleration
         scrollSpeedMultiplierRef.current += (targetScrollSpeedMultiplier - scrollSpeedMultiplierRef.current) * lerpFactor;
         const scrollSpeedMultiplier = scrollSpeedMultiplierRef.current;
 
-        // Calculate scroll-based rotation (gears rotate as you scroll)
-        const scrollRotation = scrollOffset * 0.003; // Continuous rotation based on scroll position
+        // Very slow scroll-based rotation that reverses with scroll direction
+        const scrollRotation = scrollDelta * 0.0001 * scrollDirection; // Much slower, direction-aware
 
-        // Friction coefficient - slows down rotation over time
-        const friction = 0.95; // 0.95 = 5% slowdown per frame
+        // Higher friction for smoother, slower movement
+        const friction = 0.92; // 8% slowdown per frame for slower coasting
 
         // Draw mechanical gears
         gearsRef.current.forEach((gear, index) => {
             const offsetX = gear.baseX + mouseOffsetX * 0.2;
             const offsetY = gear.baseY + mouseOffsetY * 0.2 - scrollOffset * 0.15;
 
-            // Apply scroll boost to angular velocity
+            // Apply scroll boost to angular velocity (direction-aware)
             if (scrollDelta > 0) {
-                // Add scroll energy to angular velocity
-                gear.angularVelocity += scrollRotation * 0.5 + gear.baseRotationSpeed * (scrollSpeedMultiplier - 1);
+                // Add scroll energy with direction - gears reverse when scrolling up
+                gear.angularVelocity += scrollRotation + gear.baseRotationSpeed * (scrollSpeedMultiplier - 1) * scrollDirection;
             }
 
             // Apply friction to angular velocity
@@ -625,9 +653,9 @@ const BackgroundCanvas: React.FC = () => {
             bolt.x = bolt.baseX + mouseOffsetX * 0.15;
             bolt.y = bolt.baseY + mouseOffsetY * 0.15 - scrollOffset * 0.1;
 
-            // Apply scroll boost to bolt angular velocity
+            // Apply scroll boost to bolt angular velocity (direction-aware)
             if (scrollDelta > 0) {
-                bolt.angularVelocity += scrollRotation * 0.3 + bolt.baseRotationSpeed * (scrollSpeedMultiplier - 1);
+                bolt.angularVelocity += scrollRotation * 0.5 + bolt.baseRotationSpeed * (scrollSpeedMultiplier - 1) * scrollDirection;
             }
 
             // Apply friction to bolt angular velocity
@@ -726,8 +754,10 @@ const BackgroundCanvas: React.FC = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, [initElements]);
 
-    // Handle mouse movement
+    // Handle mouse movement (desktop)
     useEffect(() => {
+        if (isMobile) return; // Skip mouse events on mobile
+
         const handleMouseMove = (e: MouseEvent) => {
             mouseRef.current = {
                 x: e.clientX / window.innerWidth,
@@ -737,7 +767,41 @@ const BackgroundCanvas: React.FC = () => {
 
         window.addEventListener('mousemove', handleMouseMove);
         return () => window.removeEventListener('mousemove', handleMouseMove);
-    }, []);
+    }, [isMobile]);
+
+    // Handle gyroscope (mobile)
+    useEffect(() => {
+        if (!isMobile) return; // Skip gyro events on desktop
+
+        const handleOrientation = (event: DeviceOrientationEvent) => {
+            const beta = event.beta || 0; // Front-back tilt (-180 to 180)
+            const gamma = event.gamma || 0; // Left-right tilt (-90 to 90)
+
+            // Normalize to 0-1 range, centered at 0.5
+            gyroRef.current = {
+                x: 0.5 + Math.max(-0.5, Math.min(0.5, gamma / 90)), // -90 to 90 degrees
+                y: 0.5 + Math.max(-0.5, Math.min(0.5, beta / 180)), // -180 to 180 degrees
+            };
+        };
+
+        // Request permission for iOS 13+
+        if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+            (DeviceOrientationEvent as any).requestPermission()
+                .then((permissionState: string) => {
+                    if (permissionState === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation);
+                    }
+                })
+                .catch(console.error);
+        } else {
+            // Non-iOS or older iOS
+            window.addEventListener('deviceorientation', handleOrientation);
+        }
+
+        return () => {
+            window.removeEventListener('deviceorientation', handleOrientation);
+        };
+    }, [isMobile]);
 
     // Handle scroll
     useEffect(() => {

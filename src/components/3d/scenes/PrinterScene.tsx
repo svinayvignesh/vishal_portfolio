@@ -34,13 +34,23 @@ const PrinterScene: React.FC = () => {
   const activeSceneId = useStore((state) => state.activeSceneId);
   const isSceneActive = activeSceneId === '3d-printer';
 
-  // Optimize model on load
+  // Optimize model on load with aggressive culling
   useEffect(() => {
     if (scene) {
       optimizeModel(scene, {
         enableBackfaceCulling: true,
         simplifyShaders: qualitySettings.useSimplifiedShaders,
-        enableOcclusion: true, // Cull small/distant objects not visible to camera
+        enableOcclusion: true,
+        hiddenMeshNames: ['interior', 'hidden', 'back'], // Hide interior meshes
+      });
+
+      // Additional optimization: Freeze matrices for static objects
+      scene.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          // Freeze world matrix for better performance
+          child.matrixAutoUpdate = false;
+          child.updateMatrix();
+        }
       });
     }
   }, [scene, qualitySettings.useSimplifiedShaders]);
@@ -94,6 +104,9 @@ const PrinterScene: React.FC = () => {
           targetY,
           0.15 // Increased from 0.1 for snappier response, less lerp iterations
         );
+        // Enable matrix updates for animated mesh
+        mesh3Ref.current.matrixAutoUpdate = true;
+        mesh3Ref.current.updateMatrix();
       }
 
       // Other meshes: move DOWN (negative y direction)
@@ -106,6 +119,8 @@ const PrinterScene: React.FC = () => {
           targetY,
           0.15
         );
+        mesh1Ref.current.matrixAutoUpdate = true;
+        mesh1Ref.current.updateMatrix();
       }
 
       if (mesh2Ref.current) {
@@ -115,6 +130,8 @@ const PrinterScene: React.FC = () => {
           targetY,
           0.15
         );
+        mesh2Ref.current.matrixAutoUpdate = true;
+        mesh2Ref.current.updateMatrix();
       }
 
       if (mesh4Ref.current) {
@@ -124,6 +141,8 @@ const PrinterScene: React.FC = () => {
           targetY,
           0.15
         );
+        mesh4Ref.current.matrixAutoUpdate = true;
+        mesh4Ref.current.updateMatrix();
       }
     }
 

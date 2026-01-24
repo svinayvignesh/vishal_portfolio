@@ -11,9 +11,10 @@ import {
 interface RoleSectionProps {
   role: CareerRole;
   index: number;
+  isMobile?: boolean;
 }
 
-const RoleSection: React.FC<RoleSectionProps> = ({ role, index }) => {
+const RoleSection: React.FC<RoleSectionProps> = ({ role, index, isMobile = false }) => {
   const isEven = index % 2 === 0;
   const totalRoles = portfolioData.roles.length;
   const isFirst = index === 0;
@@ -54,7 +55,7 @@ const RoleSection: React.FC<RoleSectionProps> = ({ role, index }) => {
 
   return (
     <div className={`w-full max-w-7xl mx-auto px-4 py-20 ${isEven ? 'md:pr-[35%]' : 'md:pl-[35%]'}`}>
-      <div className="card-steel p-8 md:p-10 relative overflow-hidden">
+      <div className={`card-steel p-8 md:p-10 relative overflow-hidden ${isMobile ? 'opacity-80' : ''}`}>
         {/* Logo watermark background */}
         {role.logo && (
           <div className="absolute top-4 right-4 w-32 h-32 opacity-[0.5] pointer-events-none">

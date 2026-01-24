@@ -68,6 +68,9 @@ const GlobalScene: React.FC = () => {
           // Enable hardware acceleration
           gl.setClearColor('#000000', 0);
 
+          // Compile shaders ahead of time to prevent first-frame stuttering
+          gl.compile(scene, camera);
+
           // Optimize scene rendering
           scene.traverse((obj) => {
             if (obj instanceof THREE.Mesh) {

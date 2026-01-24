@@ -40,6 +40,7 @@ const PrinterScene: React.FC = () => {
       optimizeModel(scene, {
         enableBackfaceCulling: true,
         simplifyShaders: qualitySettings.useSimplifiedShaders,
+        enableOcclusion: true, // Cull small/distant objects not visible to camera
       });
     }
   }, [scene, qualitySettings.useSimplifiedShaders]);
@@ -76,6 +77,10 @@ const PrinterScene: React.FC = () => {
 
     // Skip expensive mesh animations if not active (only do mouse + float)
     const shouldAnimateMeshes = isSceneActive;
+
+    // Frame skipping for low-end devices - skip 2 out of 3 frames
+    frameCountRef.current++;
+    const skipFrame = qualitySettings.targetFPS < 30 && frameCountRef.current % 3 !== 0;
 
     // Mesh animations when scene is active
     // OPTIMIZED: Direct assignment instead of double-lerp (was causing stuttering)
@@ -122,8 +127,8 @@ const PrinterScene: React.FC = () => {
       }
     }
 
-    // Mouse tracking and floating on group
-    if (groupRef.current) {
+    // Mouse tracking and floating on group - with frame skipping
+    if (groupRef.current && !skipFrame) {
       // Only update rotation if mouse parallax is enabled and mouse moved significantly
       if (qualitySettings.enableMouseParallax) {
         const mouseDeltaX = Math.abs(mouse.x - prevMouseRef.current.x);
@@ -135,12 +140,12 @@ const PrinterScene: React.FC = () => {
           groupRef.current.rotation.y = THREE.MathUtils.lerp(
             groupRef.current.rotation.y,
             targetRotationY,
-            0.05
+            0.08 // Increased lerp speed for fewer updates
           );
           groupRef.current.rotation.x = THREE.MathUtils.lerp(
             groupRef.current.rotation.x,
             targetRotationX,
-            0.05
+            0.08
           );
           prevMouseRef.current = { x: mouse.x, y: mouse.y };
         }

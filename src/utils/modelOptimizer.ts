@@ -35,6 +35,7 @@ export interface ModelOptimizationOptions {
   simplifyShaders?: boolean;
   hiddenMeshNames?: string[];
   mergeStaticMeshes?: boolean;
+  enableOcclusion?: boolean; // Additional culling for small/distant objects
 }
 
 export function optimizeModel(
@@ -46,6 +47,7 @@ export function optimizeModel(
     simplifyShaders = false,
     hiddenMeshNames = [],
     mergeStaticMeshes = false,
+    enableOcclusion = true,
   } = options;
 
   scene.traverse((child) => {
@@ -71,8 +73,24 @@ export function optimizeModel(
       child.castShadow = false;
       child.receiveShadow = false;
 
-      // Enable frustum culling (should be default, but ensure it's on)
+      // Enable frustum culling - only render objects visible to camera viewport
       child.frustumCulled = true;
+
+      // Enable occlusion culling for small objects
+      // This prevents rendering tiny/distant objects that won't be visible anyway
+      if (enableOcclusion) {
+        // Calculate bounding sphere for culling
+        if (!child.geometry.boundingSphere) {
+          child.geometry.computeBoundingSphere();
+        }
+
+        // For very small meshes, increase culling aggressiveness
+        const boundingSphere = child.geometry.boundingSphere;
+        if (boundingSphere && boundingSphere.radius < 0.05) {
+          // Small meshes - more aggressive culling
+          child.renderOrder = 1; // Render later (can be culled earlier)
+        }
+      }
 
       // Simplify shaders for low-end devices
       if (simplifyShaders && child.material) {

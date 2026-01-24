@@ -28,6 +28,7 @@ const PaperStackScene: React.FC = () => {
       optimizeModel(scene, {
         enableBackfaceCulling: true,
         simplifyShaders: qualitySettings.useSimplifiedShaders,
+        enableOcclusion: true,
       });
     }
   }, [scene, qualitySettings.useSimplifiedShaders]);

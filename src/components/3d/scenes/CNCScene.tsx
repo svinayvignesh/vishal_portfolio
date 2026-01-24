@@ -19,12 +19,16 @@ const CNCScene: React.FC = () => {
   // Get quality settings from store
   const qualitySettings = useStore((state) => state.qualitySettings);
 
+  // Frame counter for skipping frames on low-end devices
+  const frameCountRef = useRef(0);
+
   // Optimize model on load
   useEffect(() => {
     if (scene) {
       optimizeModel(scene, {
         enableBackfaceCulling: true,
         simplifyShaders: qualitySettings.useSimplifiedShaders,
+        enableOcclusion: true,
       });
     }
   }, [scene, qualitySettings.useSimplifiedShaders]);
@@ -46,8 +50,11 @@ const CNCScene: React.FC = () => {
       lightRef.current.color.copy(color);
     }
 
-    // Mouse tracking and floating
-    if (groupRef.current) {
+    // Mouse tracking and floating - with frame skipping for performance
+    frameCountRef.current++;
+    const skipFrame = qualitySettings.targetFPS < 30 && frameCountRef.current % 3 !== 0;
+
+    if (groupRef.current && !skipFrame) {
       // Mouse-based rotation (subtle) - only if enabled
       if (qualitySettings.enableMouseParallax) {
         const targetRotationY = -0.4 + mouse.x * 0.3;
@@ -55,12 +62,12 @@ const CNCScene: React.FC = () => {
         groupRef.current.rotation.y = THREE.MathUtils.lerp(
           groupRef.current.rotation.y,
           targetRotationY,
-          0.05
+          0.08 // Increased lerp speed to compensate for fewer updates
         );
         groupRef.current.rotation.x = THREE.MathUtils.lerp(
           groupRef.current.rotation.x,
           targetRotationX,
-          0.05
+          0.08
         );
       }
 

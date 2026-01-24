@@ -20,12 +20,16 @@ const TurbineScene: React.FC = () => {
   // Get quality settings from store
   const qualitySettings = useStore((state) => state.qualitySettings);
 
+  // Frame counter for skipping frames on low-end devices
+  const frameCountRef = useRef(0);
+
   // Optimize model on load
   useEffect(() => {
     if (scene) {
       optimizeModel(scene, {
         enableBackfaceCulling: true,
         simplifyShaders: qualitySettings.useSimplifiedShaders,
+        enableOcclusion: true,
       });
     }
   }, [scene, qualitySettings.useSimplifiedShaders]);
@@ -68,8 +72,11 @@ const TurbineScene: React.FC = () => {
       action.time = targetTime;
     }
 
-    // Mouse tracking and floating on group
-    if (groupRef.current) {
+    // Mouse tracking and floating on group - with frame skipping for performance
+    frameCountRef.current++;
+    const skipFrame = qualitySettings.targetFPS < 30 && frameCountRef.current % 3 !== 0;
+
+    if (groupRef.current && !skipFrame) {
       // Base rotation values
       const baseRotationX = 0.5;
       const baseRotationY = -1.3;
@@ -81,12 +88,12 @@ const TurbineScene: React.FC = () => {
         groupRef.current.rotation.y = THREE.MathUtils.lerp(
           groupRef.current.rotation.y,
           targetRotationY,
-          0.05
+          0.08 // Increased lerp speed to compensate for fewer updates
         );
         groupRef.current.rotation.x = THREE.MathUtils.lerp(
           groupRef.current.rotation.x,
           targetRotationX,
-          0.05
+          0.08
         );
       }
 

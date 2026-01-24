@@ -46,9 +46,8 @@ const GlobalScene: React.FC = () => {
       ref={containerRef}
       className="fixed inset-0 -z-10 transition-colors duration-1000"
       style={{
-        background: isDark
-          ? 'linear-gradient(180deg, hsl(220 20% 8%) 0%, hsl(220 25% 4%) 100%)'
-          : 'linear-gradient(180deg, hsl(40 33% 92%) 0%, hsl(40 33% 95%) 100%)'
+        // Background is now transparent - the 2D BackgroundCanvas provides the gradient
+        background: 'transparent'
       }}
     >
       <Canvas
@@ -65,17 +64,28 @@ const GlobalScene: React.FC = () => {
         }}
         shadows={quality.shadows}
         frameloop="always" // Always render (frameloop="demand" would be more efficient but may cause issues)
-        onCreated={({ gl, scene }) => {
+        onCreated={({ gl, scene, camera }) => {
           // Enable hardware acceleration
           gl.setClearColor('#000000', 0);
 
           // Optimize scene rendering
           scene.traverse((obj) => {
             if (obj instanceof THREE.Mesh) {
-              // Enable frustum culling
+              // Enable frustum culling - only render objects visible to camera
               obj.frustumCulled = true;
+
+              // Optimize rendering by disabling auto-update on matrices when static
+              if (obj.userData.isStatic) {
+                obj.matrixAutoUpdate = false;
+              }
             }
           });
+
+          // Set up optimal frustum culling by configuring camera
+          if (camera instanceof THREE.PerspectiveCamera) {
+            // Update camera projection matrix to ensure accurate culling
+            camera.updateProjectionMatrix();
+          }
         }}
       >
         <Suspense fallback={null}>
@@ -125,7 +135,7 @@ const GlobalScene: React.FC = () => {
       />
 
       {/* Noise texture overlay */}
-      <div className="noise-overlay opacity-30 mix-blend-overlay" />
+      <div className="noise-overlay mix-blend-overlay" />
     </div>
   );
 };

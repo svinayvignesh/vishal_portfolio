@@ -12,10 +12,13 @@ const queryClient = new QueryClient();
 
 import LoadingScreen from "@/components/ui/LoadingScreen";
 import { CreditsDialog } from "@/components/CreditsDialog";
+import BackgroundCanvas from "@/components/BackgroundCanvas";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      {/* Lightweight animated background - always visible behind everything */}
+      <BackgroundCanvas />
       <LoadingScreen />
       <CreditsDialog />
       <Toaster />

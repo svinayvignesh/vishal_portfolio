@@ -8,7 +8,7 @@ import CNCScene from './scenes/CNCScene';
 import RoofingScene from './scenes/RoofingScene';
 import TurbineScene from './scenes/TurbineScene';
 import AutomotiveScene from './scenes/AutomotiveScene';
-import HeroScene from './scenes/HeroScene';
+// HeroScene removed - replaced with lightweight BackgroundCanvas
 
 // Wrapper for scene transitions
 // Wrapper for scene transitions
@@ -111,8 +111,8 @@ const StageManager: React.FC = () => {
     return () => clearTimeout(debounceTimerRef.current);
   }, [activeSceneId]);
 
-  // Scene order for determining which scenes to mount
-  const sceneOrder = ['hero', 'paper-stack', '3d-printer', 'cnc-machine', 'roofing-sheets', 'gas-turbine', 'automotive'];
+  // Scene order for determining which scenes to mount (hero removed - now using BackgroundCanvas)
+  const sceneOrder = ['paper-stack', '3d-printer', 'cnc-machine', 'roofing-sheets', 'gas-turbine', 'automotive'];
 
   // Helper to render scenes wrapped in transition
   const renderScene = (id: string, Component: React.FC<any>, slideFrom: 'left' | 'right' | 'none' = 'none') => {
@@ -122,8 +122,8 @@ const StageManager: React.FC = () => {
     const activeIndex = sceneOrder.indexOf(stableActiveSceneId);
     const sceneIndex = sceneOrder.indexOf(id);
 
-    // Mount scenes within distance of 1 from active scene (or always mount hero)
-    const shouldMount = id === 'hero' || Math.abs(sceneIndex - activeIndex) <= 1;
+    // Mount scenes within distance of 1 from active scene
+    const shouldMount = Math.abs(sceneIndex - activeIndex) <= 1;
 
     if (!shouldMount) return null;
 
@@ -138,11 +138,9 @@ const StageManager: React.FC = () => {
     );
   };
 
-  // Mapping based on Card Layout
+  // Mapping based on Card Layout (hero removed)
   return (
     <group>
-      {/* Hero: Render with transition wrapper for proper visibility control */}
-      {renderScene('hero', HeroScene, 'none')}
       {renderScene('paper-stack', PaperStackScene, 'right')}
       {renderScene('3d-printer', PrinterScene, 'left')}
       {renderScene('cnc-machine', CNCScene, 'right')}

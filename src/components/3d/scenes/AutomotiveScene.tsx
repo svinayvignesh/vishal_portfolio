@@ -29,6 +29,7 @@ const AutomotiveScene: React.FC = () => {
       optimizeModel(scene, {
         enableBackfaceCulling: true,
         simplifyShaders: qualitySettings.useSimplifiedShaders,
+        enableOcclusion: true,
         hiddenMeshNames: [
           'console',      // Interior console
           'pedals',       // Interior pedals
@@ -72,8 +73,12 @@ const AutomotiveScene: React.FC = () => {
       lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, targetIntensity, 0.1);
     }
 
-    // Mouse tracking and floating (when visible)
-    if (groupRef.current) {
+    // Mouse tracking and floating (when visible) - with frame skipping
+    // Skip 2 out of 3 frames on low-end devices
+    frameCountRef.current++;
+    const skipFrame = qualitySettings.targetFPS < 30 && frameCountRef.current % 3 !== 0;
+
+    if (groupRef.current && !skipFrame) {
       // Base rotation values
       const baseRotationX = -2.9722319608769;
       const baseRotationY = -0.4687061236053624;
@@ -89,12 +94,12 @@ const AutomotiveScene: React.FC = () => {
           groupRef.current.rotation.y = THREE.MathUtils.lerp(
             groupRef.current.rotation.y,
             targetRotationY,
-            0.05
+            0.08 // Increased for fewer updates
           );
           groupRef.current.rotation.x = THREE.MathUtils.lerp(
             groupRef.current.rotation.x,
             targetRotationX,
-            0.05
+            0.08
           );
           prevMouseRef.current = { x: mouse.x, y: mouse.y };
         }

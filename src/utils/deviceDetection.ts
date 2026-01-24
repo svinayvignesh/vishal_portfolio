@@ -37,11 +37,15 @@ export const detectDevicePerformance = (): PerformanceLevel => {
     const debugInfo = (gl as any).getExtension('WEBGL_debug_renderer_info');
     const renderer = debugInfo ? (gl as any).getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : '';
 
-    // Check for integrated/low-end GPUs
+    // Check for integrated/low-end GPUs - expanded patterns for older hardware
     const isIntegratedGPU = /Intel|AMD.*Radeon.*Vega|Mali|Adreno [1-5]|PowerVR/i.test(renderer);
+    const isLowEndGPU = /Intel.*HD.*Graphics.*[2-5]|Intel.*UHD.*[1-6]|AMD.*R[2-5]|GeForce.*GT.*[1-9][0-9]{2}|Radeon.*HD/i.test(renderer);
 
     // Mobile devices always get low settings
     if (isMobile || hasLowMemory) return 'low';
+
+    // Low-end discrete GPUs also get low settings
+    if (isLowEndGPU) return 'low';
 
     // Integrated GPUs get medium settings
     if (isIntegratedGPU) return 'medium';
@@ -64,7 +68,7 @@ export const getQualitySettings = (performance: PerformanceLevel): QualitySettin
       dpr: [1, 1], // No super-sampling
       antialias: false, // Disable anti-aliasing
       shadows: false, // No shadows
-      envIntensity: 0.1, // Minimal environment reflections
+      envIntensity: 0, // DISABLED - environment map is expensive
       maxLights: 2, // Only 2 lights total
       pixelRatio: 1,
       // Performance optimizations for low-end devices
@@ -73,7 +77,7 @@ export const getQualitySettings = (performance: PerformanceLevel): QualitySettin
       maxDrawCalls: 20, // Force LOD switching
       textureMaxSize: 512, // Downsample textures
       useSimplifiedShaders: true, // Use basic materials instead of PBR
-      targetFPS: 30, // Target 30 FPS instead of 60
+      targetFPS: 24, // Target 24 FPS for smoother experience on low-end
     },
     medium: {
       dpr: [1, 1.5], // Limited super-sampling

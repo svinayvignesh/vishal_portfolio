@@ -1,34 +1,27 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useMouse } from '@/hooks/use-mouse';
 // @ts-ignore
 import modelUrl from '/models/cnc_machine/cnc_machine-transformed.glb?url';
 
 const CNCScene: React.FC = () => {
   const groupRef = useRef<THREE.Group>(null);
   const lightRef = useRef<THREE.PointLight>(null);
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+  const mouse = useMouse();
 
   //Load the model
   const { nodes, materials } = useGLTF(modelUrl) as any;
 
-  // Track mouse position
-  useEffect(() => {
-    const handleMouseMove = (event: MouseEvent) => {
-      setMouse({
-        x: (event.clientX / window.innerWidth) * 2 - 1,
-        y: -(event.clientY / window.innerHeight) * 2 + 1,
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
   // Animate light color, mouse tracking, and floating
   useFrame((state) => {
     const elapsed = state.clock.elapsedTime;
+
+    // Check if scene is visible - skip animations when invisible
+    if (!groupRef.current) return;
+    const isVisible = groupRef.current.parent && groupRef.current.parent.scale.x > 0.05;
+    if (!isVisible) return;
 
     // Light color cycling
     if (lightRef.current) {

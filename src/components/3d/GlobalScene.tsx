@@ -4,11 +4,16 @@ import { Preload, Environment } from '@react-three/drei';
 import StageManager from './StageManager';
 
 import { useIsMobile } from '@/hooks/use-mobile';
+import { detectDevicePerformance, getQualitySettings } from '@/utils/deviceDetection';
 
 const GlobalScene: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isDark = true;
   const isMobile = useIsMobile();
+
+  // Detect device performance and get quality settings
+  const devicePerformance = detectDevicePerformance();
+  const quality = getQualitySettings(devicePerformance);
 
   return (
     <div
@@ -22,43 +27,35 @@ const GlobalScene: React.FC = () => {
     >
       <Canvas
         camera={{ position: [0, 0, isMobile ? 14 : 10], fov: 50 }}
-        dpr={[1, 2]}
+        dpr={quality.dpr}
         gl={{
-          antialias: true,
+          antialias: quality.antialias,
           alpha: true,
           powerPreference: 'high-performance'
         }}
-        shadows
+        shadows={quality.shadows}
       >
         <Suspense fallback={null}>
-          {/* Ambient Light - Brighter in light mode to avoid harsh blacks */}
-          <ambientLight intensity={isDark ? 0.6 : 1.5} />
+          {/* Ambient Light - Adjusted for performance */}
+          <ambientLight intensity={isDark ? 0.4 : 1.2} />
 
-          {/* Main Key Light */}
+          {/* Main Key Light - Shadows disabled for performance */}
           <directionalLight
             position={[10, 10, 5]}
-            intensity={isDark ? 2.5 : 1.5}
+            intensity={isDark ? 2.0 : 1.2}
             color={isDark ? "#88b4d4" : "#ffffff"}
-            castShadow
-            shadow-mapSize={[1024, 1024]}
+            castShadow={false}
           />
 
-          {/* Rim/Accent Light */}
+          {/* Rim/Accent Light - Reduced from 2 point lights to 1 */}
           <pointLight
             position={[-5, 5, 5]}
-            intensity={isDark ? 3.0 : 0.5}
+            intensity={isDark ? 2.0 : 0.4}
             color={isDark ? "#d4a574" : "#ffaa66"}
           />
 
-          {/* Fill Light */}
-          <pointLight
-            position={[0, -5, 5]}
-            intensity={isDark ? 1.0 : 0.8}
-            color={isDark ? "#4a6d8c" : "#aaccff"}
-          />
-
-          {/* Environment map: 'city' for dark industrial feel, 'studio' for clean light mode */}
-          <Environment preset={isDark ? "city" : "studio"} environmentIntensity={isDark ? 0.5 : 0.3} />
+          {/* Environment map with adaptive intensity based on device performance */}
+          <Environment preset={isDark ? "city" : "studio"} environmentIntensity={quality.envIntensity} />
 
           {/* Scene manager handles all 3D scene transitions */}
           <StageManager />

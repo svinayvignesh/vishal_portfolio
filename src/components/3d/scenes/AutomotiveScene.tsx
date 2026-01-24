@@ -1,7 +1,8 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useMouse } from '@/hooks/use-mouse';
 import { useStore } from '@/store/useStore';
 // @ts-ignore
 import modelUrl from '/models/ford/ford_f150_raptor-transformed.glb?url';
@@ -9,45 +10,47 @@ import modelUrl from '/models/ford/ford_f150_raptor-transformed.glb?url';
 const AutomotiveScene: React.FC = () => {
   const groupRef = useRef<THREE.Group>(null);
   const lightRef = useRef<THREE.PointLight>(null);
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+  const mouse = useMouse();
 
   // Load the model
   const { nodes, materials } = useGLTF(modelUrl) as any;
 
-  // Track mouse position
-  useEffect(() => {
-    const handleMouseMove = (event: MouseEvent) => {
-      setMouse({
-        x: (event.clientX / window.innerWidth) * 2 - 1,
-        y: -(event.clientY / window.innerHeight) * 2 + 1,
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
-  // Animate light x position and intensity based on scroll progress, plus mouse tracking and floating
+  // Animate mouse tracking and floating
   useFrame((state) => {
     const elapsed = state.clock.elapsedTime;
-    const { sectionProgress, activeSceneId } = useStore.getState();
-    const isSceneActive = activeSceneId === 'automotive';
+
+    // Check if scene is currently visible by checking parent scale
+    // We need to keep animating during transitions for smooth rendering
+    if (!groupRef.current) return;
+
+    const isVisible = groupRef.current.parent && groupRef.current.parent.scale.x > 0.05;
+
+    // Only skip animations when scene is completely invisible
+    if (!isVisible) {
+      // Fade out light intensity when invisible
+      if (lightRef.current && lightRef.current.intensity > 0.01) {
+        lightRef.current.intensity *= 0.9;
+      }
+      return;
+    }
+
+    // Get scroll progress for light animation from store
+    const { sectionProgress } = useStore.getState();
 
     // Scroll-driven light animation
     if (lightRef.current) {
       const targetX = THREE.MathUtils.lerp(0.8, -0.3, sectionProgress);
       lightRef.current.position.x = targetX;
 
-      const targetIntensity = isSceneActive ? 100 * sectionProgress : 0;
+      const targetIntensity = 100 * sectionProgress;
       lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, targetIntensity, 0.1);
     }
 
-    // Mouse tracking and floating
+    // Mouse tracking and floating (when visible)
     if (groupRef.current) {
       // Base rotation values
       const baseRotationX = -2.9722319608769;
       const baseRotationY = -0.4687061236053624;
-      const baseRotationZ = -3.1081290466466123;
 
       // Mouse-based rotation (subtle)
       const targetRotationY = baseRotationY + mouse.x * 0.2;
@@ -105,7 +108,7 @@ const AutomotiveScene: React.FC = () => {
         <mesh geometry={nodes.Object_42.geometry} material={materials['vehicle_generic_tyrewallblack.002']} position={[-0.901, 0.476, -1.827]} rotation={[-1.871, -0.136, 0.416]} />
         <mesh geometry={nodes.Object_409.geometry} material={materials['Coban_tex.003']} position={[0, 0.626, 0]} rotation={[Math.PI / 2, 0, 0.005]} />
 
-        {/* Front-right accent light for car detail */}
+        {/* Front-right accent light for car detail - slides across as you scroll */}
         <pointLight ref={lightRef} position={[0.8, 1, -3]} intensity={0} color={"#1351d8"} />
       </group>
     </group>

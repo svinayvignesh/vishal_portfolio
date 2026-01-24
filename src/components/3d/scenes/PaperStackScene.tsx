@@ -1,8 +1,9 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
 import { useStore } from '@/store/useStore';
+import { useMouse } from '@/hooks/use-mouse';
 // @ts-ignore
 import modelUrl from '/models/document_file_folder/document_file_folder-transformed.glb?url';
 
@@ -11,24 +12,11 @@ const PaperStackScene: React.FC = () => {
   const pageRef = useRef<THREE.Mesh>(null);
   const reverseStartTimeRef = useRef<number | null>(null);
   const reverseStartValueRef = useRef<number>(0);
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+  const mouse = useMouse();
 
   // Load optimized model with animations
   const { nodes, materials, animations } = useGLTF(modelUrl) as any;
   const { actions, names } = useAnimations(animations, groupRef);
-
-  // Track mouse position
-  useEffect(() => {
-    const handleMouseMove = (event: MouseEvent) => {
-      setMouse({
-        x: (event.clientX / window.innerWidth) * 2 - 1,
-        y: -(event.clientY / window.innerHeight) * 2 + 1,
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
 
   // Initialize animation for scroll-driven control
   useEffect(() => {
@@ -70,6 +58,11 @@ const PaperStackScene: React.FC = () => {
     const { sectionProgress: progress, activeSceneId } = useStore.getState();
     const isSceneActive = activeSceneId === 'paper-stack';
     const elapsed = state.clock.elapsedTime;
+
+    // Check if scene is visible - skip animations when invisible
+    if (!groupRef.current) return;
+    const isVisible = groupRef.current.parent && groupRef.current.parent.scale.x > 0.05;
+    if (!isVisible) return;
 
     if (groupRef.current) {
       // Mouse-based rotation (subtle, applied to base rotation)
@@ -170,7 +163,7 @@ const PaperStackScene: React.FC = () => {
       </group>
 
       {/* Ambient lighting */}
-      <pointLight position={[2, 2, 2]} intensity={1.0} color="#d4a574" />
+      <pointLight position={[2, 2, 2]} intensity={300} color={"#df9649"} />
     </group>
   );
 };

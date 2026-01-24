@@ -1,32 +1,20 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useStore } from '@/store/useStore';
+import { useMouse } from '@/hooks/use-mouse';
 // @ts-ignore
 import modelUrl from '/models/turbine/turbine-transformed.glb?url';
 
 const TurbineScene: React.FC = () => {
   const groupRef = useRef<THREE.Group>(null);
   const lightRef = useRef<THREE.PointLight>(null);
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+  const mouse = useMouse();
 
   // Load the model (including animations)
   const { nodes, materials, animations } = useGLTF(modelUrl) as any;
   const { actions, names } = useAnimations(animations, groupRef);
-
-  // Track mouse position
-  useEffect(() => {
-    const handleMouseMove = (event: MouseEvent) => {
-      setMouse({
-        x: (event.clientX / window.innerWidth) * 2 - 1,
-        y: -(event.clientY / window.innerHeight) * 2 + 1,
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
 
   // Initialize animation action and scrub it based on scroll progress
   useEffect(() => {
@@ -46,11 +34,16 @@ const TurbineScene: React.FC = () => {
     const action = actions[names[0]];
     if (!action) return;
 
+    // Check if scene is visible - skip animations when invisible
+    if (!groupRef.current) return;
+    const isVisible = groupRef.current.parent && groupRef.current.parent.scale.x > 0.05;
+    if (!isVisible) return;
+
     // Read scroll progress and active scene
     const { sectionProgress, activeSceneId } = useStore.getState();
     const isSceneActive = activeSceneId === 'gas-turbine';
 
-    // Only run animation when scene is active
+    // Run animation when visible (needed for smooth transitions)
     if (isSceneActive) {
       // Map progress to animation time (full range)
       const clip = action.getClip();

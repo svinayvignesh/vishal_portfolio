@@ -1,25 +1,13 @@
-import React, { useRef, useMemo, useState, useEffect } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { Float } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useMouse } from '@/hooks/use-mouse';
 
 const HeroScene: React.FC = () => {
   const groupRef = useRef<THREE.Group>(null);
   const particlesRef = useRef<THREE.Points>(null);
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
-
-  // Track mouse position
-  useEffect(() => {
-    const handleMouseMove = (event: MouseEvent) => {
-      setMouse({
-        x: (event.clientX / window.innerWidth) * 2 - 1,
-        y: -(event.clientY / window.innerHeight) * 2 + 1,
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+  const mouse = useMouse();
 
   // Animate the entire group based on mouse and time
   useFrame((state) => {

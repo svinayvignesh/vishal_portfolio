@@ -1,15 +1,16 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useStore } from '@/store/useStore';
+import { useMouse } from '@/hooks/use-mouse';
 // @ts-ignore
 import modelUrl from '/models/resin_3d_printer/resin_3d_printer-transformed.glb?url';
 
 const PrinterScene: React.FC = () => {
   const groupRef = useRef<THREE.Group>(null);
   const lightRef = useRef<THREE.PointLight>(null);
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+  const mouse = useMouse();
 
   // Refs for individual meshes to animate
   const mesh1Ref = useRef<THREE.Mesh>(null);
@@ -19,19 +20,6 @@ const PrinterScene: React.FC = () => {
 
   // Load optimized model
   const { nodes, materials } = useGLTF(modelUrl) as any;
-
-  // Track mouse position
-  useEffect(() => {
-    const handleMouseMove = (event: MouseEvent) => {
-      setMouse({
-        x: (event.clientX / window.innerWidth) * 2 - 1,
-        y: -(event.clientY / window.innerHeight) * 2 + 1,
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
 
   // Base positions
   const basePositions = {
@@ -47,11 +35,26 @@ const PrinterScene: React.FC = () => {
     const { sectionProgress: rawProgress, activeSceneId } = useStore.getState();
     const isSceneActive = activeSceneId === '3d-printer';
 
+    // Check if scene is currently in view (not the same as active)
+    // We need to keep animating during transitions for smooth rendering
+    if (!groupRef.current) return;
+
+    const isVisible = groupRef.current.parent && groupRef.current.parent.scale.x > 0.05;
+
+    // Only skip animations when scene is completely invisible
+    if (!isVisible) {
+      // Fade out light intensity when invisible
+      if (lightRef.current && lightRef.current.intensity > 0.01) {
+        lightRef.current.intensity *= 0.9;
+      }
+      return;
+    }
+
     // Only start animation halfway through scroll (remap 0.5-1.0 to 0-1)
     const progress = rawProgress < 0.5 ? 0 : (rawProgress - 0.5) * 2;
 
-    // Only animate meshes when scene is active
-    if (isSceneActive) {
+    // Mesh animations when scene is active
+    {
       // Mesh 3 (capac): moves UP from 0.187 to 0.5
       if (mesh3Ref.current) {
         const targetY = THREE.MathUtils.lerp(basePositions.mesh3.y, 0.5, progress);
@@ -119,7 +122,7 @@ const PrinterScene: React.FC = () => {
       const targetY = THREE.MathUtils.lerp(-0.14, 0.25, rawProgress);
       lightRef.current.position.y = targetY;
 
-      // Fade intensity in and out based on whether scene is active
+      // Fade intensity based on scroll progress, but only when scene is active
       const targetIntensity = isSceneActive ? 1000 * rawProgress : 0;
       lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, targetIntensity, 0.1);
     }
@@ -157,9 +160,7 @@ const PrinterScene: React.FC = () => {
         scale={0.001}
       />
 
-      {/* Ambient lighting specific to this object to highlight details */}
-      <pointLight position={[2, 2, 2]} intensity={0.5} color="#4a90a4" />
-      <pointLight position={[-2, 1, 2]} intensity={0.3} color="#d4a574" />
+      {/* Single accent light for performance - removed 2 static point lights */}
       <pointLight ref={lightRef} position={[0.14, -0.14, 0.29]} intensity={0} color={"#ffffff"} />
     </group>
   );

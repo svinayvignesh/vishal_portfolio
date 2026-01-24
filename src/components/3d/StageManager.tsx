@@ -55,21 +55,21 @@ const SceneTransition: React.FC<{
       // Smooth scale transition (Fade)
       // Active: Scale -> 1. Inactive: Scale -> 0 (Shrink)
       const targetScale = isActive ? 1 : 0;
-      const scaleSpeed = isActive ? delta * 4.0 : delta * 4.0; // Faster transition speed
+      const scaleSpeed = delta * 4.0; // Faster transition speed
 
       groupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), scaleSpeed);
 
-      // Mouse Parallax Rotation
-      // We apply this to the wrapper group.
-      // Small rotation based on mouse position (-1 to 1)
-      const mouseX = state.mouse.x;
-      const mouseY = state.mouse.y;
+      // Mouse Parallax Rotation - ONLY when scene is active for performance
+      if (isActive) {
+        const mouseX = state.mouse.x;
+        const mouseY = state.mouse.y;
 
-      const targetRotY = mouseX * 0.1; // 0.1 rad is subtle
-      const targetRotX = -mouseY * 0.1;
+        const targetRotY = mouseX * 0.1; // 0.1 rad is subtle
+        const targetRotX = -mouseY * 0.1;
 
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotY, delta * 2);
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX, delta * 2);
+        groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotY, delta * 2);
+        groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX, delta * 2);
+      }
 
       // Stop rendering if scaled down to zero
       if (!isActive && groupRef.current.scale.x < 0.01) {

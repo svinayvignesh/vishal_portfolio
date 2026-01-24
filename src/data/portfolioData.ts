@@ -9,6 +9,15 @@ export interface CareerRole {
   summary: string;
   highlights: string[];
   skills: string[];
+  certificate?: string; // Path to certificate image
+}
+
+export interface Certification {
+  name: string;
+  link?: string;
+  issuer?: string;
+  issueDate?: string;
+  credentialId?: string;
 }
 
 export interface PortfolioData {
@@ -26,7 +35,7 @@ export interface PortfolioData {
     category: string;
     skills: string[];
   }[];
-  certifications: string[];
+  certifications: Certification[];
   education: {
     degree: string;
     school: string;
@@ -45,7 +54,7 @@ export const portfolioData: PortfolioData = {
     title: "Process Engineer | Manufacturing & Continuous Improvement",
     tagline: "Driving safety, quality, and productivity through loss elimination, CQV ownership, and shop-floor coaching.",
     summary: "Process Engineer with 5+ years of experience supporting high-volume manufacturing operations through process ownership, CQV (IQ/OQ/PQ), loss elimination, and operator capability building. Proven ability to partner with Operations, Maintenance, Quality, and Supply Chain to commission new equipment, stabilize production, and transition projects into reliable daily execution.",
-    resume: "/resume.pdf",
+    resume: "/resume.docx",
   },
   expertise: [
     {
@@ -88,11 +97,28 @@ export const portfolioData: PortfolioData = {
     },
   ],
   certifications: [
-    "CSSGB (Certified Six Sigma Green Belt)",
-    "SolidWorks Essentials",
-    "AutoCAD Certified User",
-    "Tableau Desktop Specialist",
-    "AZ 900 (Azure Fundamentals)",
+    {
+      name: "Tableau Desktop Specialist",
+      link: "https://www.credly.com/badges/b7bce271-d95a-4f51-9353-f4b1b2a4a938/linked_in_profile",
+    },
+    {
+      name: "Azure Fundamentals",
+      link: "https://www.credly.com/badges/b41f7581-62fd-4b31-a688-0c9013df995a?source=linked_in_profile",
+    },
+    {
+      name: "AutoCAD Certified User",
+      link: "https://www.credly.com/badges/5889ca21-7f4a-4df4-ae69-039febc71bfb?source=linked_in_profile",
+    },
+    {
+      name: "SolidWorks Essentials",
+      link: "https://www.linkedin.com/learning/certificates/a28f3d2bd8c8f58bcbb8782f02a2b36e1d63fdae8ba0919b368548a3adc4b857?trk=backfilled_certificate&lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_certifications_details%3BL21SuJ8PTW2Z4YYppd%2F%2F9Q%3D%3D",
+    },
+    {
+      name: "CSSGB (Six Sigma Green Belt)",
+      issuer: "TÜV SÜD",
+      issueDate: "Jul 2021",
+      credentialId: "IN/9993/94902",
+    },
   ],
   education: [
     {
@@ -187,6 +213,7 @@ export const portfolioData: PortfolioData = {
       company: "Gas Turbine Research Establishment (DRDO)",
       logo: "/logos/drdo.png",
       period: "Jan 2018 - Apr 2018",
+      certificate: "/certificates/drdo-certificate.jpg",
       summary: "Conducted advanced computational research on gear mesh stiffness modeling for aerospace gas turbine applications, developing optimized simulation methods to support design validation and performance prediction.",
       highlights: [
         "Developed and validated MATLAB-based analytical models for time-varying gear mesh stiffness in spur and helical gear systems",
@@ -203,6 +230,7 @@ export const portfolioData: PortfolioData = {
       company: "Ford Motor Company",
       logo: "/logos/ford.png",
       period: "2017",
+      certificate: "/certificates/ford-certificate.jpg",
       summary: "Gained foundational exposure to world-class automotive manufacturing operations, observing safety protocols, quality systems, and continuous improvement practices in a high-volume production environment.",
       highlights: [
         "Supported manufacturing documentation and work instruction updates for assembly line operations",

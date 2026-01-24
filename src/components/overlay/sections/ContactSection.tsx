@@ -1,12 +1,19 @@
 import React from 'react';
 import { portfolioData } from '@/data/portfolioData';
-import { Mail, Phone, Linkedin, GraduationCap, Download } from 'lucide-react';
+import { Mail, Phone, Linkedin, GraduationCap, Download, ChevronUp } from 'lucide-react';
 
 const ContactSection: React.FC = () => {
   const { personal, education, expertise } = portfolioData;
 
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  };
+
   return (
-    <div className="w-full max-w-5xl mx-auto px-6 py-20">
+    <div className="w-full max-w-5xl mx-auto px-6 py-10">
       <div className="grid md:grid-cols-2 gap-12">
         {/* Contact Card */}
         <div className="card-steel p-8">
@@ -128,10 +135,33 @@ const ContactSection: React.FC = () => {
         </div>
       </div>
 
+      {/* Scroll to Top Button */}
+      <div className="mt-12 flex justify-center">
+        <button
+          onClick={scrollToTop}
+          className="flex items-center gap-2 px-6 py-3 rounded-full bg-primary/20 hover:bg-primary/30 text-primary transition-all hover:shadow-lg group"
+          title="Back to top"
+        >
+          <ChevronUp className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
+          <span className="text-sm font-medium">Back to Top</span>
+        </button>
+      </div>
+
       {/* Footer */}
-      <div className="mt-20 text-center">
+      <div className="mt-8 text-center space-y-2">
         <p className="text-muted-foreground text-sm">
-          © {new Date().getFullYear()} {personal.name}. Built with precision engineering.
+          © {new Date().getFullYear()} {personal.name}. All rights reserved.
+        </p>
+        <p className="text-muted-foreground text-xs">
+          Website created by{' '}
+          <a
+            href="https://www.linkedin.com/in/vshasiofficial"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:text-primary/80 transition-colors underline"
+          >
+            Vinay Shasi
+          </a>
         </p>
       </div>
     </div>

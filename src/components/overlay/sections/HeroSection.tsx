@@ -1,13 +1,31 @@
-import React from 'react';
-import { portfolioData } from '@/data/portfolioData';
-import { Mail, Phone, Linkedin, ChevronDown } from 'lucide-react';
+import React, { useState } from 'react';
+import { portfolioData, Certification } from '@/data/portfolioData';
+import { Mail, Phone, Linkedin, ChevronDown, ExternalLink, Award } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const HeroSection: React.FC = () => {
   const { personal, certifications } = portfolioData;
+  const [selectedCert, setSelectedCert] = useState<Certification | null>(null);
 
   const scrollToContent = () => {
     window.scrollTo({
       top: window.innerHeight,
+      behavior: 'smooth',
+    });
+  };
+
+  const scrollToContact = () => {
+    // Scroll to the last section (Contact section)
+    // Total sections = 1 hero + 6 roles + 1 contact = 8
+    // So contact section is at index 7, which means scroll to 7 * window.innerHeight
+    window.scrollTo({
+      top: window.innerHeight * (portfolioData.roles.length + 1),
       behavior: 'smooth',
     });
   };
@@ -27,16 +45,16 @@ const HeroSection: React.FC = () => {
         <div className="flex-1">
           {/* Name and Title */}
           <div className="mb-8">
-            <h1 className="heading-technical text-5xl md:text-7xl text-foreground mb-4">
+            <h1 className="heading-technical text-5xl md:text-7xl text-foreground mb-4 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
               {personal.name}
             </h1>
-            <p className="text-xl md:text-2xl text-primary font-mono">
+            <p className="text-xl md:text-2xl text-primary font-mono drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)] bg-background/40 backdrop-blur-sm px-4 py-2 rounded-lg inline-block">
               {personal.title}
             </p>
           </div>
 
           {/* Tagline */}
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mb-8 leading-relaxed">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mb-8 leading-relaxed drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)] bg-background/30 backdrop-blur-sm px-4 py-3 rounded-lg">
             {personal.tagline}
           </p>
 
@@ -73,11 +91,36 @@ const HeroSection: React.FC = () => {
               Certifications
             </h3>
             <div className="flex flex-wrap gap-2">
-              {certifications.map((cert, i) => (
-                <span key={i} className="px-3 py-1 text-sm rounded bg-secondary text-secondary-foreground">
-                  {cert}
-                </span>
-              ))}
+              {certifications.map((cert, i) => {
+                if (cert.link) {
+                  // Clickable certification with external link
+                  return (
+                    <a
+                      key={i}
+                      href={cert.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 text-sm rounded bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground transition-all flex items-center gap-1.5 cursor-pointer group shadow-sm hover:shadow-md"
+                    >
+                      <Award className="w-3.5 h-3.5" />
+                      {cert.name}
+                      <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </a>
+                  );
+                } else {
+                  // Certification with modal dialog
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setSelectedCert(cert)}
+                      className="px-3 py-1.5 text-sm rounded bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground transition-all flex items-center gap-1.5 cursor-pointer group shadow-sm hover:shadow-md"
+                    >
+                      <Award className="w-3.5 h-3.5" />
+                      {cert.name}
+                    </button>
+                  );
+                }
+              })}
             </div>
           </div>
 
@@ -90,20 +133,48 @@ const HeroSection: React.FC = () => {
               View Experience
               <ChevronDown className="w-4 h-4" />
             </button>
-            <a
-              href={`mailto:${personal.email}`}
+            <button
+              onClick={scrollToContact}
               className="btn-steel"
             >
               Get in Touch
-            </a>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Scroll indicator */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
-        <ChevronDown className="w-6 h-6 text-muted-foreground" />
-      </div>
+
+      {/* Certification Details Modal */}
+      <Dialog open={selectedCert !== null} onOpenChange={() => setSelectedCert(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Award className="w-5 h-5 text-primary" />
+              {selectedCert?.name}
+            </DialogTitle>
+            <DialogDescription className="space-y-3 pt-4">
+              {selectedCert?.issuer && (
+                <div>
+                  <span className="font-semibold text-foreground">Issuer:</span>{' '}
+                  <span className="text-muted-foreground">{selectedCert.issuer}</span>
+                </div>
+              )}
+              {selectedCert?.issueDate && (
+                <div>
+                  <span className="font-semibold text-foreground">Issued:</span>{' '}
+                  <span className="text-muted-foreground">{selectedCert.issueDate}</span>
+                </div>
+              )}
+              {selectedCert?.credentialId && (
+                <div>
+                  <span className="font-semibold text-foreground">Credential ID:</span>{' '}
+                  <span className="text-muted-foreground font-mono text-sm">{selectedCert.credentialId}</span>
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

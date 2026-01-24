@@ -26,37 +26,196 @@ interface FloatingShape {
     alpha: number;
 }
 
-interface ZodiacConstellation {
-    name: string;
-    stars: { x: number; y: number }[];
-    connections: [number, number][];
+interface MechanicalGear {
+    x: number;
+    y: number;
     baseX: number;
     baseY: number;
-    scale: number;
+    radius: number;
+    teeth: number;
+    rotation: number;
+    rotationSpeed: number;
+    baseRotationSpeed: number; // Original rotation speed
+    angularVelocity: number; // Current angular velocity with friction applied
+    alpha: number;
+    type: 'spur' | 'helical' | 'planetary';
+}
+
+interface MechanicalBolt {
+    x: number;
+    y: number;
+    baseX: number;
+    baseY: number;
+    size: number;
+    alpha: number;
+    rotation: number;
+    rotationSpeed: number;
+    baseRotationSpeed: number;
+    angularVelocity: number;
+}
+
+interface MechanicalSpring {
+    x: number;
+    y: number;
+    baseX: number;
+    baseY: number;
+    length: number;
+    rotation: number;
     alpha: number;
 }
 
-// Zodiac constellation patterns (simplified star positions)
-const ZODIAC_PATTERNS: { name: string; stars: { x: number; y: number }[]; connections: [number, number][] }[] = [
-    { name: 'Aries', stars: [{ x: 0, y: 0 }, { x: 20, y: -10 }, { x: 35, y: -5 }, { x: 50, y: 5 }], connections: [[0, 1], [1, 2], [2, 3]] },
-    { name: 'Taurus', stars: [{ x: 0, y: 0 }, { x: 15, y: -15 }, { x: 30, y: -10 }, { x: 45, y: 0 }, { x: 25, y: 10 }, { x: 40, y: 15 }], connections: [[0, 1], [1, 2], [2, 3], [2, 4], [3, 5]] },
-    { name: 'Gemini', stars: [{ x: 0, y: 0 }, { x: 10, y: -20 }, { x: 25, y: -25 }, { x: 40, y: 0 }, { x: 50, y: -20 }, { x: 60, y: -25 }], connections: [[0, 1], [1, 2], [3, 4], [4, 5], [0, 3]] },
-    { name: 'Cancer', stars: [{ x: 0, y: 0 }, { x: 20, y: -15 }, { x: 40, y: -10 }, { x: 30, y: 5 }, { x: 15, y: 15 }], connections: [[0, 1], [1, 2], [1, 3], [3, 4]] },
-    { name: 'Leo', stars: [{ x: 0, y: 0 }, { x: 15, y: -20 }, { x: 35, y: -25 }, { x: 50, y: -15 }, { x: 55, y: 0 }, { x: 40, y: 10 }, { x: 20, y: 5 }], connections: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 0]] },
-    { name: 'Virgo', stars: [{ x: 0, y: 0 }, { x: 20, y: -10 }, { x: 40, y: -15 }, { x: 60, y: -10 }, { x: 50, y: 5 }, { x: 30, y: 10 }], connections: [[0, 1], [1, 2], [2, 3], [2, 4], [4, 5], [5, 1]] },
-    { name: 'Libra', stars: [{ x: 0, y: 0 }, { x: 25, y: -20 }, { x: 50, y: 0 }, { x: 25, y: 15 }], connections: [[0, 1], [1, 2], [0, 3], [2, 3]] },
-    { name: 'Scorpio', stars: [{ x: 0, y: 0 }, { x: 15, y: -5 }, { x: 30, y: 0 }, { x: 45, y: 5 }, { x: 60, y: 0 }, { x: 70, y: -10 }, { x: 75, y: -20 }], connections: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6]] },
-    { name: 'Sagittarius', stars: [{ x: 0, y: 0 }, { x: 20, y: -15 }, { x: 40, y: -20 }, { x: 25, y: 5 }, { x: 45, y: -5 }, { x: 60, y: -10 }], connections: [[0, 1], [1, 2], [1, 3], [1, 4], [4, 5]] },
-    { name: 'Capricorn', stars: [{ x: 0, y: 0 }, { x: 20, y: -15 }, { x: 40, y: -10 }, { x: 50, y: 5 }, { x: 35, y: 15 }, { x: 15, y: 10 }], connections: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0]] },
-    { name: 'Aquarius', stars: [{ x: 0, y: 0 }, { x: 15, y: -10 }, { x: 30, y: -5 }, { x: 45, y: -10 }, { x: 55, y: 0 }, { x: 65, y: 10 }], connections: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5]] },
-    { name: 'Pisces', stars: [{ x: 0, y: 0 }, { x: 15, y: -10 }, { x: 30, y: -5 }, { x: 45, y: -15 }, { x: 50, y: 0 }, { x: 60, y: 10 }, { x: 70, y: 5 }], connections: [[0, 1], [1, 2], [2, 3], [2, 4], [4, 5], [5, 6]] },
-];
+// Drawing functions for mechanical elements
+const drawGear = (ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, teeth: number, rotation: number, type: 'spur' | 'helical' | 'planetary') => {
+    const toothHeight = radius * 0.25;
+    const innerRadius = radius - toothHeight;
+    const toothWidth = 0.4;
+
+    ctx.beginPath();
+
+    // Draw gear teeth using lineTo for cleaner rendering
+    for (let i = 0; i < teeth; i++) {
+        const angle1 = (i / teeth) * Math.PI * 2 + rotation;
+        const angle2 = ((i + toothWidth * 0.5) / teeth) * Math.PI * 2 + rotation;
+        const angle3 = ((i + toothWidth) / teeth) * Math.PI * 2 + rotation;
+        const angle4 = ((i + 1) / teeth) * Math.PI * 2 + rotation;
+
+        if (i === 0) {
+            ctx.moveTo(x + innerRadius * Math.cos(angle1), y + innerRadius * Math.sin(angle1));
+        }
+
+        // Inner arc to tooth base
+        ctx.lineTo(x + innerRadius * Math.cos(angle1), y + innerRadius * Math.sin(angle1));
+        // Up to tooth tip
+        ctx.lineTo(x + radius * Math.cos(angle2), y + radius * Math.sin(angle2));
+        // Across tooth tip
+        ctx.lineTo(x + radius * Math.cos(angle3), y + radius * Math.sin(angle3));
+        // Down from tooth
+        ctx.lineTo(x + innerRadius * Math.cos(angle3), y + innerRadius * Math.sin(angle3));
+        // Inner arc to next tooth
+        ctx.lineTo(x + innerRadius * Math.cos(angle4), y + innerRadius * Math.sin(angle4));
+    }
+
+    ctx.closePath();
+
+    // Center hole
+    ctx.moveTo(x + radius * 0.3, y);
+    ctx.arc(x, y, radius * 0.3, 0, Math.PI * 2, false);
+
+    // Hub spokes for planetary type
+    if (type === 'planetary') {
+        for (let i = 0; i < 4; i++) {
+            const angle = (i / 4) * Math.PI * 2 + rotation;
+            ctx.moveTo(x + Math.cos(angle) * radius * 0.3, y + Math.sin(angle) * radius * 0.3);
+            ctx.lineTo(x + Math.cos(angle) * innerRadius, y + Math.sin(angle) * innerRadius);
+        }
+    }
+};
+
+const drawCenterline = (ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) => {
+    const dashLength = 10;
+    const gapLength = 5;
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const length = Math.sqrt(dx * dx + dy * dy);
+    const steps = Math.floor(length / (dashLength + gapLength));
+
+    ctx.beginPath();
+    for (let i = 0; i < steps; i++) {
+        const t1 = (i * (dashLength + gapLength)) / length;
+        const t2 = (i * (dashLength + gapLength) + dashLength) / length;
+        ctx.moveTo(x1 + dx * t1, y1 + dy * t1);
+        ctx.lineTo(x1 + dx * t2, y1 + dy * t2);
+    }
+};
+
+const drawDimensionLine = (ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) => {
+    // Main dimension line
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+
+    // Arrows at ends
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    const arrowSize = 8;
+
+    // Start arrow
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x1 + arrowSize * Math.cos(angle + 2.8), y1 + arrowSize * Math.sin(angle + 2.8));
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x1 + arrowSize * Math.cos(angle - 2.8), y1 + arrowSize * Math.sin(angle - 2.8));
+
+    // End arrow
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - arrowSize * Math.cos(angle + 2.8), y2 - arrowSize * Math.sin(angle + 2.8));
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - arrowSize * Math.cos(angle - 2.8), y2 - arrowSize * Math.sin(angle - 2.8));
+};
+
+// Additional mechanical drawing functions
+const drawBolt = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, rotation: number) => {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+
+    // Hexagonal head
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const px = size * Math.cos(angle);
+        const py = size * Math.sin(angle);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+
+    // Center circle
+    ctx.moveTo(size * 0.4, 0);
+    ctx.arc(0, 0, size * 0.4, 0, Math.PI * 2, false);
+
+    ctx.restore();
+};
+
+const drawSpring = (ctx: CanvasRenderingContext2D, x: number, y: number, length: number, rotation: number) => {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+
+    ctx.beginPath();
+    const coils = 8;
+    const amplitude = 6;
+    for (let i = 0; i <= coils * 10; i++) {
+        const t = i / (coils * 10);
+        const xPos = t * length - length / 2;
+        const yPos = Math.sin(t * Math.PI * 2 * coils) * amplitude;
+        if (i === 0) ctx.moveTo(xPos, yPos);
+        else ctx.lineTo(xPos, yPos);
+    }
+    ctx.restore();
+};
+
+const drawBlueprintGrid = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, gridSize: number) => {
+    ctx.beginPath();
+    // Vertical lines
+    for (let i = 0; i <= width / gridSize; i++) {
+        ctx.moveTo(x + i * gridSize, y);
+        ctx.lineTo(x + i * gridSize, y + height);
+    }
+    // Horizontal lines
+    for (let j = 0; j <= height / gridSize; j++) {
+        ctx.moveTo(x, y + j * gridSize);
+        ctx.lineTo(x + width, y + j * gridSize);
+    }
+};
+
+const MECHANICAL_SYMBOLS: Record<string, (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, scale: number) => void> = {};
+
 
 /**
- * Lightweight 2D Canvas background with zodiac constellations.
+ * Lightweight 2D Canvas background with mechanical engineering elements.
  * Features:
+ * - Rotating mechanical gears (spur, helical, planetary)
+ * - Technical drawing centerlines and dimension lines
  * - Floating geometric shapes (hexagons, triangles, circles, lines, squares, diamonds, plus signs, dashes)
- * - Zodiac constellation stars with connecting lines
  * - Particle field
  * - Mouse parallax effect
  * - Scroll-responsive movement
@@ -66,9 +225,13 @@ const BackgroundCanvas: React.FC = () => {
     const animationRef = useRef<number>(0);
     const particlesRef = useRef<Particle[]>([]);
     const shapesRef = useRef<FloatingShape[]>([]);
-    const constellationsRef = useRef<ZodiacConstellation[]>([]);
+    const gearsRef = useRef<MechanicalGear[]>([]);
+    const boltsRef = useRef<MechanicalBolt[]>([]);
+    const springsRef = useRef<MechanicalSpring[]>([]);
     const mouseRef = useRef({ x: 0.5, y: 0.5 });
     const scrollRef = useRef(0);
+    const lastScrollRef = useRef(0);
+    const scrollSpeedMultiplierRef = useRef(1); // Smoothly interpolated multiplier
     const lastFrameTimeRef = useRef(0);
     const dprRef = useRef(1);
     const timeRef = useRef(0);
@@ -130,13 +293,52 @@ const BackgroundCanvas: React.FC = () => {
             };
         });
 
-        // Initialize zodiac constellations distributed across the canvas
-        constellationsRef.current = ZODIAC_PATTERNS.map((pattern, index) => ({
-            ...pattern,
-            baseX: (width / 4) + (index % 4) * (width / 4) + (Math.random() - 0.5) * 100,
-            baseY: (height / 4) + Math.floor(index / 4) * (height / 3) + (Math.random() - 0.5) * 100,
-            scale: 1.5 + Math.random() * 0.5,
-            alpha: 0.3 + Math.random() * 0.2,
+        // Initialize mechanical gears distributed across the canvas
+        // More gears, larger sizes, better distribution
+        gearsRef.current = Array.from({ length: 20 }, (_, index) => {
+            const baseSpeed = (Math.random() - 0.5) * 0.002;
+            return {
+                x: 0,
+                y: 0,
+                baseX: (index % 5) * (width / 5) + (Math.random() - 0.5) * 120,
+                baseY: Math.floor(index / 5) * (height / 4) + (Math.random() - 0.5) * 120,
+                radius: 35 + Math.random() * 55, // Larger gears
+                teeth: 10 + Math.floor(Math.random() * 14),
+                rotation: Math.random() * Math.PI * 2,
+                rotationSpeed: baseSpeed,
+                baseRotationSpeed: baseSpeed,
+                angularVelocity: 0, // Start stationary
+                alpha: 0.5 + Math.random() * 0.35, // More visible
+                type: (['spur', 'helical', 'planetary'] as const)[Math.floor(Math.random() * 3)],
+            };
+        });
+
+        // Initialize bolts scattered across canvas
+        boltsRef.current = Array.from({ length: 30 }, () => {
+            const baseSpeed = (Math.random() - 0.5) * 0.001;
+            return {
+                x: 0,
+                y: 0,
+                baseX: Math.random() * width,
+                baseY: Math.random() * height,
+                size: 8 + Math.random() * 10, // Larger bolts
+                alpha: 0.3 + Math.random() * 0.4,
+                rotation: Math.random() * Math.PI * 2,
+                rotationSpeed: baseSpeed,
+                baseRotationSpeed: baseSpeed,
+                angularVelocity: 0,
+            };
+        });
+
+        // Initialize springs
+        springsRef.current = Array.from({ length: 15 }, () => ({
+            x: 0,
+            y: 0,
+            baseX: Math.random() * width,
+            baseY: Math.random() * height,
+            length: 40 + Math.random() * 60,
+            rotation: Math.random() * Math.PI * 2,
+            alpha: 0.25 + Math.random() * 0.3,
         }));
     }, [targetFPS, colors.primary, colors.accent, colors.subtle, colors.dark, colors.star]);
 
@@ -318,75 +520,154 @@ const BackgroundCanvas: React.FC = () => {
             ctx.restore();
         });
 
-        // Update time for twinkling effect
+        // Update time for rotation
         timeRef.current += 0.02;
 
-        // Draw zodiac constellations
-        constellationsRef.current.forEach((constellation) => {
-            const offsetX = constellation.baseX + mouseOffsetX * 0.2;
-            const offsetY = constellation.baseY + mouseOffsetY * 0.2 - scrollOffset * 0.15;
+        // Calculate scroll velocity for dynamic rotation speed
+        const currentScroll = scrollRef.current;
+        const scrollDelta = Math.abs(currentScroll - lastScrollRef.current);
+        lastScrollRef.current = currentScroll;
+        const targetScrollSpeedMultiplier = 1 + Math.min(scrollDelta * 0.05, 4); // Up to 5x speed on scroll
+
+        // Smooth interpolation: gradually return to normal speed when scrolling stops
+        const lerpFactor = scrollDelta > 0 ? 0.15 : 0.05; // Fast acceleration, slow deceleration
+        scrollSpeedMultiplierRef.current += (targetScrollSpeedMultiplier - scrollSpeedMultiplierRef.current) * lerpFactor;
+        const scrollSpeedMultiplier = scrollSpeedMultiplierRef.current;
+
+        // Calculate scroll-based rotation (gears rotate as you scroll)
+        const scrollRotation = scrollOffset * 0.003; // Continuous rotation based on scroll position
+
+        // Friction coefficient - slows down rotation over time
+        const friction = 0.95; // 0.95 = 5% slowdown per frame
+
+        // Draw mechanical gears
+        gearsRef.current.forEach((gear, index) => {
+            const offsetX = gear.baseX + mouseOffsetX * 0.2;
+            const offsetY = gear.baseY + mouseOffsetY * 0.2 - scrollOffset * 0.15;
+
+            // Apply scroll boost to angular velocity
+            if (scrollDelta > 0) {
+                // Add scroll energy to angular velocity
+                gear.angularVelocity += scrollRotation * 0.5 + gear.baseRotationSpeed * (scrollSpeedMultiplier - 1);
+            }
+
+            // Apply friction to angular velocity
+            gear.angularVelocity *= friction;
+
+            // Update gear position and rotation
+            gear.x = offsetX;
+            gear.y = offsetY;
+            gear.rotation += gear.angularVelocity;
 
             ctx.save();
 
-            // Draw constellation connection lines
-            ctx.strokeStyle = `rgba(136, 180, 212, ${constellation.alpha * 0.5})`;
-            ctx.lineWidth = 1;
-            ctx.setLineDash([3, 6]);
+            // Draw gear with stronger presence
+            ctx.strokeStyle = `rgba(212, 165, 116, ${gear.alpha})`;
+            ctx.lineWidth = 2.5;
+            ctx.shadowColor = `rgba(212, 165, 116, ${gear.alpha * 0.6})`;
+            ctx.shadowBlur = 10;
 
-            constellation.connections.forEach(([startIdx, endIdx]) => {
-                const startStar = constellation.stars[startIdx];
-                const endStar = constellation.stars[endIdx];
-                if (startStar && endStar) {
-                    ctx.beginPath();
-                    ctx.moveTo(
-                        offsetX + startStar.x * constellation.scale,
-                        offsetY + startStar.y * constellation.scale
-                    );
-                    ctx.lineTo(
-                        offsetX + endStar.x * constellation.scale,
-                        offsetY + endStar.y * constellation.scale
-                    );
-                    ctx.stroke();
-                }
-            });
-
-            ctx.setLineDash([]);
-
-            // Draw stars with twinkling effect
-            constellation.stars.forEach((star, starIdx) => {
-                const twinkle = Math.sin(timeRef.current * 2 + starIdx * 0.5) * 0.3 + 0.7;
-                const starX = offsetX + star.x * constellation.scale;
-                const starY = offsetY + star.y * constellation.scale;
-                const starSize = 2 + Math.random() * 0.5;
-
-                // Star glow
-                const glowGradient = ctx.createRadialGradient(starX, starY, 0, starX, starY, starSize * 4);
-                glowGradient.addColorStop(0, `rgba(255, 255, 255, ${constellation.alpha * twinkle * 0.8})`);
-                glowGradient.addColorStop(0.5, `rgba(136, 180, 212, ${constellation.alpha * twinkle * 0.3})`);
-                glowGradient.addColorStop(1, 'transparent');
-                ctx.fillStyle = glowGradient;
-                ctx.fillRect(starX - starSize * 4, starY - starSize * 4, starSize * 8, starSize * 8);
-
-                // Star core
-                ctx.beginPath();
-                ctx.arc(starX, starY, starSize * twinkle, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${constellation.alpha * twinkle})`;
-                ctx.fill();
-
-                // Star outline (4-point star shape)
-                ctx.strokeStyle = `rgba(255, 255, 255, ${constellation.alpha * twinkle * 0.5})`;
-                ctx.lineWidth = 0.5;
-                const rayLength = starSize * 3 * twinkle;
-                ctx.beginPath();
-                ctx.moveTo(starX - rayLength, starY);
-                ctx.lineTo(starX + rayLength, starY);
-                ctx.moveTo(starX, starY - rayLength);
-                ctx.lineTo(starX, starY + rayLength);
-                ctx.stroke();
-            });
+            drawGear(ctx, gear.x, gear.y, gear.radius, gear.teeth, gear.rotation, gear.type);
+            ctx.stroke();
 
             ctx.restore();
+
+            // Draw centerlines between some adjacent gears
+            if (index > 0 && index % 4 === 0) {
+                const prevGear = gearsRef.current[index - 1];
+                if (prevGear) {
+                    const prevOffsetX = prevGear.baseX + mouseOffsetX * 0.2;
+                    const prevOffsetY = prevGear.baseY + mouseOffsetY * 0.2 - scrollOffset * 0.15;
+
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(136, 180, 212, ${(gear.alpha + prevGear.alpha) * 0.3})`;
+                    ctx.lineWidth = 1.5;
+                    drawCenterline(ctx, prevOffsetX, prevOffsetY, gear.x, gear.y);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+
+            // Draw dimension lines for some gears
+            if (index % 5 === 0 && gear.radius > 50) {
+                ctx.save();
+                ctx.strokeStyle = `rgba(74, 144, 164, ${gear.alpha * 0.4})`;
+                ctx.lineWidth = 1;
+                drawDimensionLine(
+                    ctx,
+                    gear.x - gear.radius,
+                    gear.y - gear.radius - 15,
+                    gear.x + gear.radius,
+                    gear.y - gear.radius - 15
+                );
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // Draw center crosshair for some gears
+            if (index % 3 === 1) {
+                ctx.save();
+                ctx.strokeStyle = `rgba(212, 165, 116, ${gear.alpha * 0.5})`;
+                ctx.lineWidth = 1;
+                const crossSize = gear.radius * 0.2;
+                ctx.beginPath();
+                ctx.moveTo(gear.x - crossSize, gear.y);
+                ctx.lineTo(gear.x + crossSize, gear.y);
+                ctx.moveTo(gear.x, gear.y - crossSize);
+                ctx.lineTo(gear.x, gear.y + crossSize);
+                ctx.stroke();
+                ctx.restore();
+            }
         });
+
+        // Draw bolts
+        boltsRef.current.forEach((bolt) => {
+            bolt.x = bolt.baseX + mouseOffsetX * 0.15;
+            bolt.y = bolt.baseY + mouseOffsetY * 0.15 - scrollOffset * 0.1;
+
+            // Apply scroll boost to bolt angular velocity
+            if (scrollDelta > 0) {
+                bolt.angularVelocity += scrollRotation * 0.3 + bolt.baseRotationSpeed * (scrollSpeedMultiplier - 1);
+            }
+
+            // Apply friction to bolt angular velocity
+            bolt.angularVelocity *= friction;
+
+            // Update bolt rotation
+            bolt.rotation += bolt.angularVelocity;
+
+            ctx.save();
+            ctx.strokeStyle = `rgba(136, 180, 212, ${bolt.alpha})`;
+            ctx.fillStyle = `rgba(136, 180, 212, ${bolt.alpha * 0.3})`;
+            ctx.lineWidth = 1.5;
+            drawBolt(ctx, bolt.x, bolt.y, bolt.size, bolt.rotation);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+        });
+
+        // Draw springs
+        springsRef.current.forEach((spring) => {
+            spring.x = spring.baseX + mouseOffsetX * 0.18;
+            spring.y = spring.baseY + mouseOffsetY * 0.18 - scrollOffset * 0.12;
+
+            ctx.save();
+            ctx.strokeStyle = `rgba(212, 165, 116, ${spring.alpha})`;
+            ctx.lineWidth = 2;
+            drawSpring(ctx, spring.x, spring.y, spring.length, spring.rotation);
+            ctx.stroke();
+            ctx.restore();
+        });
+
+        // Draw blueprint grid sections in corners
+        ctx.save();
+        ctx.strokeStyle = `rgba(74, 144, 164, 0.08)`;
+        ctx.lineWidth = 0.5;
+        drawBlueprintGrid(ctx, 0, 0, width * 0.2, height * 0.2, 20);
+        ctx.stroke();
+        drawBlueprintGrid(ctx, width * 0.8, height * 0.8, width * 0.2, height * 0.2, 20);
+        ctx.stroke();
+        ctx.restore();
 
         // Draw particles
         particlesRef.current.forEach((particle) => {

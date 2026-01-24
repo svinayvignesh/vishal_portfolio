@@ -160,17 +160,18 @@
   /* Card with steel border effect */
   .card-steel {
     @apply relative overflow-hidden rounded-lg;
-    /* Mobile: transparent background to show 3D models */
-    background: linear-gradient(145deg, hsl(220 18% 14% / 0.01), hsl(220 18% 10% / 0.01));
-    backdrop-filter: blur(4px);
+    /* Mobile: More opaque background for better readability */
+    background: linear-gradient(145deg, hsl(220 18% 14% / 0.95), hsl(220 18% 10% / 0.92));
+    backdrop-filter: blur(12px);
     border: 1px solid hsl(var(--border));
     box-shadow: var(--shadow-card);
   }
 
   @media (min-width: 768px) {
     .card-steel {
-      background: var(--gradient-card);
-      backdrop-filter: none;
+      /* Desktop: Keep semi-transparent to show 3D models on the side */
+      background: linear-gradient(145deg, hsl(220 18% 14% / 0.85), hsl(220 18% 10% / 0.75));
+      backdrop-filter: blur(8px);
     }
   }
 

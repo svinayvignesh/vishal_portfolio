@@ -8,27 +8,25 @@ import CNCScene from './scenes/CNCScene';
 import RoofingScene from './scenes/RoofingScene';
 import TurbineScene from './scenes/TurbineScene';
 import AutomotiveScene from './scenes/AutomotiveScene';
+import { useGyroscopeNormalized } from '@/hooks/use-gyroscope';
 // HeroScene removed - replaced with lightweight BackgroundCanvas
 
 // Wrapper for scene transitions
-// Wrapper for scene transitions
-import { useIsMobile } from '@/hooks/use-mobile';
 
 const SceneTransition: React.FC<{
   children: React.ReactNode;
   isActive: boolean;
   slideFrom?: 'left' | 'right' | 'none';
-}> = ({ children, isActive, slideFrom = 'none' }) => {
+  gyroEnabled?: boolean;
+}> = ({ children, isActive, slideFrom = 'none', gyroEnabled = false }) => {
   const groupRef = useRef<THREE.Group>(null);
   const [render, setRender] = useState(isActive);
 
   // Reusable Vector3 to avoid allocations every frame
   const targetScaleVec = useRef(new THREE.Vector3());
 
-  const isMobile = useIsMobile();
-
-  // Gyroscope state for mobile devices
-  const gyroRef = useRef({ x: 0, y: 0 });
+  // Use custom gyroscope hook
+  const { gyroRef, isMobile } = useGyroscopeNormalized(gyroEnabled);
 
   // Calculate target offset for active state
   // On mobile, always center the model (0). On desktop, use the side offset.
@@ -47,40 +45,7 @@ const SceneTransition: React.FC<{
     }
   }, [isActive, initialX]);
 
-  // Setup gyroscope listener for mobile devices
-  useEffect(() => {
-    if (!isMobile) return;
-
-    const handleOrientation = (event: DeviceOrientationEvent) => {
-      // beta: front-back tilt (-180 to 180), gamma: left-right tilt (-90 to 90)
-      const beta = event.beta || 0; // Front-back tilt
-      const gamma = event.gamma || 0; // Left-right tilt
-
-      // Normalize to -1 to 1 range, similar to pointer
-      // Clamp and scale beta (tilt forward/back) to reasonable range
-      gyroRef.current.y = Math.max(-1, Math.min(1, beta / 45)); // -45 to 45 degrees
-      // Clamp and scale gamma (tilt left/right) to reasonable range
-      gyroRef.current.x = Math.max(-1, Math.min(1, gamma / 45)); // -45 to 45 degrees
-    };
-
-    // Request permission for iOS 13+
-    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-      (DeviceOrientationEvent as any).requestPermission()
-        .then((permissionState: string) => {
-          if (permissionState === 'granted') {
-            window.addEventListener('deviceorientation', handleOrientation);
-          }
-        })
-        .catch(console.error);
-    } else {
-      // Non-iOS or older iOS
-      window.addEventListener('deviceorientation', handleOrientation);
-    }
-
-    return () => {
-      window.removeEventListener('deviceorientation', handleOrientation);
-    };
-  }, [isMobile]);
+  // Gyroscope is now handled by the useGyroscopeNormalized custom hook
 
   useFrame((state, delta) => {
     if (groupRef.current) {
@@ -142,7 +107,11 @@ const SceneTransition: React.FC<{
   );
 };
 
-const StageManager: React.FC = () => {
+interface StageManagerProps {
+  gyroEnabled?: boolean;
+}
+
+const StageManager: React.FC<StageManagerProps> = ({ gyroEnabled = false }) => {
   const { activeSceneId, sectionProgress, currentSection } = useStore();
 
   // Debounce scene mounting to prevent rapid mount/unmount during fast scrolling
@@ -193,6 +162,7 @@ const StageManager: React.FC = () => {
         key={id}
         isActive={activeSceneId === id || (id === 'hero' && currentSection === 0)}
         slideFrom={slideFrom}
+        gyroEnabled={gyroEnabled}
       >
         <Component progress={sectionProgress} />
       </SceneTransition>

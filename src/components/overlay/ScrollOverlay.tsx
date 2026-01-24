@@ -71,13 +71,13 @@ const ScrollOverlay: React.FC = () => {
             <RoleSection role={role} index={index} isMobile={isMobile} />
           </section>
 
-          {/* 3D Model Section - Only on mobile, appears after each experience */}
+          {/* 3D Model Section - Only on mobile, small peek space for 3D model */}
           {isMobile && (
             <section
-              className="scroll-section min-h-screen flex items-center justify-center snap-start snap-always"
+              className="scroll-section h-64 flex items-center justify-center snap-start snap-always"
               data-scene-index={index}
             >
-              {/* Empty section for 3D model to be visible (positioned fixed behind) */}
+              {/* Small section for 3D model to peek through (positioned fixed behind) */}
               <div className="w-full h-full" />
             </section>
           )}

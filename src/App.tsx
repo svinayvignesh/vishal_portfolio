@@ -13,25 +13,34 @@ const queryClient = new QueryClient();
 import LoadingScreen from "@/components/ui/LoadingScreen";
 import { CreditsDialog } from "@/components/CreditsDialog";
 import BackgroundCanvas from "@/components/BackgroundCanvas";
+import GyroscopePermission from "@/components/GyroscopePermission";
+import { useState } from "react";
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      {/* Lightweight animated background - always visible behind everything */}
-      <BackgroundCanvas />
-      <LoadingScreen />
-      <CreditsDialog />
-      <Toaster />
-      <Sonner />
-      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [gyroEnabled, setGyroEnabled] = useState(false);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        {/* Gyroscope permission prompt for iOS devices */}
+        <GyroscopePermission onPermissionGranted={() => setGyroEnabled(true)} />
+
+        {/* Lightweight animated background - always visible behind everything */}
+        <BackgroundCanvas gyroEnabled={gyroEnabled} />
+        <LoadingScreen />
+        <CreditsDialog />
+        <Toaster />
+        <Sonner />
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <Routes>
+            <Route path="/" element={<Index gyroEnabled={gyroEnabled} />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

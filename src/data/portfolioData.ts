@@ -213,7 +213,7 @@ export const portfolioData: PortfolioData = {
       company: "Gas Turbine Research Establishment (DRDO)",
       logo: "/logos/drdo.png",
       period: "Jan 2018 - Apr 2018",
-      certificate: "/certificates/drdo-certificate.jpg",
+      certificate: "/certificates/drdo-certificate.png",
       summary: "Conducted advanced computational research on gear mesh stiffness modeling for aerospace gas turbine applications, developing optimized simulation methods to support design validation and performance prediction.",
       highlights: [
         "Developed and validated MATLAB-based analytical models for time-varying gear mesh stiffness in spur and helical gear systems",
@@ -230,7 +230,7 @@ export const portfolioData: PortfolioData = {
       company: "Ford Motor Company",
       logo: "/logos/ford.png",
       period: "2017",
-      certificate: "/certificates/ford-certificate.jpg",
+      certificate: "/certificates/ford-certificate.png",
       summary: "Gained foundational exposure to world-class automotive manufacturing operations, observing safety protocols, quality systems, and continuous improvement practices in a high-volume production environment.",
       highlights: [
         "Supported manufacturing documentation and work instruction updates for assembly line operations",

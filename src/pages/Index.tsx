@@ -3,11 +3,15 @@ import GlobalScene from '@/components/3d/GlobalScene';
 import ScrollOverlay from '@/components/overlay/ScrollOverlay';
 import ProgressIndicator from '@/components/overlay/ProgressIndicator';
 
-const Index: React.FC = () => {
+interface IndexProps {
+  gyroEnabled?: boolean;
+}
+
+const Index: React.FC<IndexProps> = ({ gyroEnabled = false }) => {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       {/* Fixed 3D Background */}
-      <GlobalScene />
+      <GlobalScene gyroEnabled={gyroEnabled} />
 
       {/* Scrollable HTML Content */}
       <ScrollOverlay />

@@ -5,7 +5,6 @@ import * as THREE from 'three';
 import StageManager from './StageManager';
 
 import { useIsMobile } from '@/hooks/use-mobile';
-import { detectDevicePerformance, getQualitySettings } from '@/utils/deviceDetection';
 import { useStore } from '@/store/useStore';
 
 /**
@@ -32,14 +31,17 @@ function FrameRateLimiter() {
   return null;
 }
 
-const GlobalScene: React.FC = () => {
+interface GlobalSceneProps {
+  gyroEnabled?: boolean;
+}
+
+const GlobalScene: React.FC<GlobalSceneProps> = ({ gyroEnabled = false }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isDark = true;
   const isMobile = useIsMobile();
 
-  // Detect device performance and get quality settings
-  const devicePerformance = detectDevicePerformance();
-  const quality = getQualitySettings(devicePerformance);
+  // Get quality settings from store (computed once on app init)
+  const quality = useStore((state) => state.qualitySettings);
 
   return (
     <div
@@ -121,7 +123,7 @@ const GlobalScene: React.FC = () => {
           )}
 
           {/* Scene manager handles all 3D scene transitions */}
-          <StageManager />
+          <StageManager gyroEnabled={gyroEnabled} />
 
           <Preload all />
         </Suspense>

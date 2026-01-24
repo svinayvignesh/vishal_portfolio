@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import { useStore } from '@/store/useStore';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useGyroscope } from '@/hooks/use-gyroscope';
 
 interface Particle {
     x: number;
@@ -221,7 +221,11 @@ const MECHANICAL_SYMBOLS: Record<string, (ctx: CanvasRenderingContext2D, centerX
  * - Mouse parallax effect
  * - Scroll-responsive movement
  */
-const BackgroundCanvas: React.FC = () => {
+interface BackgroundCanvasProps {
+    gyroEnabled?: boolean;
+}
+
+const BackgroundCanvas: React.FC<BackgroundCanvasProps> = ({ gyroEnabled = false }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animationRef = useRef<number>(0);
     const particlesRef = useRef<Particle[]>([]);
@@ -230,14 +234,15 @@ const BackgroundCanvas: React.FC = () => {
     const boltsRef = useRef<MechanicalBolt[]>([]);
     const springsRef = useRef<MechanicalSpring[]>([]);
     const mouseRef = useRef({ x: 0.5, y: 0.5 });
-    const gyroRef = useRef({ x: 0.5, y: 0.5 }); // Gyroscope data for mobile
     const scrollRef = useRef(0);
     const lastScrollRef = useRef(0);
     const scrollSpeedMultiplierRef = useRef(1); // Smoothly interpolated multiplier
     const lastFrameTimeRef = useRef(0);
     const dprRef = useRef(1);
     const timeRef = useRef(0);
-    const isMobile = useIsMobile();
+
+    // Use custom gyroscope hook
+    const { gyroRef, isMobile } = useGyroscope(gyroEnabled);
 
     // Get quality settings for adaptive performance
     const qualitySettings = useStore((state) => state.qualitySettings);
@@ -769,39 +774,7 @@ const BackgroundCanvas: React.FC = () => {
         return () => window.removeEventListener('mousemove', handleMouseMove);
     }, [isMobile]);
 
-    // Handle gyroscope (mobile)
-    useEffect(() => {
-        if (!isMobile) return; // Skip gyro events on desktop
-
-        const handleOrientation = (event: DeviceOrientationEvent) => {
-            const beta = event.beta || 0; // Front-back tilt (-180 to 180)
-            const gamma = event.gamma || 0; // Left-right tilt (-90 to 90)
-
-            // Normalize to 0-1 range, centered at 0.5
-            gyroRef.current = {
-                x: 0.5 + Math.max(-0.5, Math.min(0.5, gamma / 90)), // -90 to 90 degrees
-                y: 0.5 + Math.max(-0.5, Math.min(0.5, beta / 180)), // -180 to 180 degrees
-            };
-        };
-
-        // Request permission for iOS 13+
-        if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-            (DeviceOrientationEvent as any).requestPermission()
-                .then((permissionState: string) => {
-                    if (permissionState === 'granted') {
-                        window.addEventListener('deviceorientation', handleOrientation);
-                    }
-                })
-                .catch(console.error);
-        } else {
-            // Non-iOS or older iOS
-            window.addEventListener('deviceorientation', handleOrientation);
-        }
-
-        return () => {
-            window.removeEventListener('deviceorientation', handleOrientation);
-        };
-    }, [isMobile]);
+    // Gyroscope is now handled by the useGyroscope custom hook
 
     // Handle scroll
     useEffect(() => {

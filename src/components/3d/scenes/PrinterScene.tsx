@@ -21,6 +21,10 @@ const PrinterScene: React.FC = () => {
   // Load optimized model
   const { nodes, materials } = useGLTF(modelUrl) as any;
 
+  // Cache previous frame values to skip unchanged calculations
+  const prevMouseRef = useRef({ x: 0, y: 0 });
+  const frameCountRef = useRef(0);
+
   // Base positions
   const basePositions = {
     mesh1: { y: 0.228 },
@@ -53,8 +57,11 @@ const PrinterScene: React.FC = () => {
     // Only start animation halfway through scroll (remap 0.5-1.0 to 0-1)
     const progress = rawProgress < 0.5 ? 0 : (rawProgress - 0.5) * 2;
 
+    // Skip expensive mesh animations if not active (only do mouse + float)
+    const shouldAnimateMeshes = isSceneActive;
+
     // Mesh animations when scene is active
-    {
+    if (shouldAnimateMeshes) {
       // Mesh 3 (capac): moves UP from 0.187 to 0.5
       if (mesh3Ref.current) {
         const targetY = THREE.MathUtils.lerp(basePositions.mesh3.y, 0.5, progress);
@@ -98,23 +105,32 @@ const PrinterScene: React.FC = () => {
 
     // Mouse tracking and floating on group
     if (groupRef.current) {
-      // Mouse-based rotation (subtle)
-      const targetRotationY = mouse.x * 0.2;
-      const targetRotationX = mouse.y * 0.15;
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(
-        groupRef.current.rotation.y,
-        targetRotationY,
-        0.05
-      );
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(
-        groupRef.current.rotation.x,
-        targetRotationX,
-        0.05
-      );
+      // Only update rotation if mouse moved significantly (threshold 0.01)
+      const mouseDeltaX = Math.abs(mouse.x - prevMouseRef.current.x);
+      const mouseDeltaY = Math.abs(mouse.y - prevMouseRef.current.y);
 
-      // Floating effect
-      const floatY = Math.sin(elapsed * 0.5) * 0.05;
-      groupRef.current.position.y = -1.5 + floatY;
+      if (mouseDeltaX > 0.01 || mouseDeltaY > 0.01) {
+        const targetRotationY = mouse.x * 0.2;
+        const targetRotationX = mouse.y * 0.15;
+        groupRef.current.rotation.y = THREE.MathUtils.lerp(
+          groupRef.current.rotation.y,
+          targetRotationY,
+          0.05
+        );
+        groupRef.current.rotation.x = THREE.MathUtils.lerp(
+          groupRef.current.rotation.x,
+          targetRotationX,
+          0.05
+        );
+        prevMouseRef.current = { x: mouse.x, y: mouse.y };
+      }
+
+      // Floating effect - only calculate every 2nd frame
+      frameCountRef.current++;
+      if (frameCountRef.current % 2 === 0) {
+        const floatY = Math.sin(elapsed * 0.5) * 0.05;
+        groupRef.current.position.y = -1.5 + floatY;
+      }
     }
 
     // Animate light y position from -0.14 to 0.25

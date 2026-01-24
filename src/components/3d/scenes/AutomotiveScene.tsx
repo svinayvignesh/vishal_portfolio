@@ -15,6 +15,10 @@ const AutomotiveScene: React.FC = () => {
   // Load the model
   const { nodes, materials } = useGLTF(modelUrl) as any;
 
+  // Cache previous frame values to skip unchanged calculations
+  const prevMouseRef = useRef({ x: 0, y: 0 });
+  const frameCountRef = useRef(0);
+
   // Animate mouse tracking and floating
   useFrame((state) => {
     const elapsed = state.clock.elapsedTime;
@@ -52,23 +56,32 @@ const AutomotiveScene: React.FC = () => {
       const baseRotationX = -2.9722319608769;
       const baseRotationY = -0.4687061236053624;
 
-      // Mouse-based rotation (subtle)
-      const targetRotationY = baseRotationY + mouse.x * 0.2;
-      const targetRotationX = baseRotationX + mouse.y * 0.15;
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(
-        groupRef.current.rotation.y,
-        targetRotationY,
-        0.05
-      );
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(
-        groupRef.current.rotation.x,
-        targetRotationX,
-        0.05
-      );
+      // Only update rotation if mouse moved significantly (threshold 0.01)
+      const mouseDeltaX = Math.abs(mouse.x - prevMouseRef.current.x);
+      const mouseDeltaY = Math.abs(mouse.y - prevMouseRef.current.y);
 
-      // Floating effect - applied to the inner group position
-      const floatY = Math.sin(elapsed * 0.5) * 0.08;
-      groupRef.current.position.y = floatY;
+      if (mouseDeltaX > 0.01 || mouseDeltaY > 0.01) {
+        const targetRotationY = baseRotationY + mouse.x * 0.2;
+        const targetRotationX = baseRotationX + mouse.y * 0.15;
+        groupRef.current.rotation.y = THREE.MathUtils.lerp(
+          groupRef.current.rotation.y,
+          targetRotationY,
+          0.05
+        );
+        groupRef.current.rotation.x = THREE.MathUtils.lerp(
+          groupRef.current.rotation.x,
+          targetRotationX,
+          0.05
+        );
+        prevMouseRef.current = { x: mouse.x, y: mouse.y };
+      }
+
+      // Floating effect - only calculate every 2nd frame
+      frameCountRef.current++;
+      if (frameCountRef.current % 2 === 0) {
+        const floatY = Math.sin(elapsed * 0.5) * 0.08;
+        groupRef.current.position.y = floatY;
+      }
     }
   });
 

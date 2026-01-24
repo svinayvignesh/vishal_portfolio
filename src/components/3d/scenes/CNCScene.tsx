@@ -1,8 +1,10 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useMouse } from '@/hooks/use-mouse';
+import { useStore } from '@/store/useStore';
+import { optimizeModel } from '@/utils/modelOptimizer';
 // @ts-ignore
 import modelUrl from '/models/cnc_machine/cnc_machine-transformed.glb?url';
 
@@ -11,8 +13,21 @@ const CNCScene: React.FC = () => {
   const lightRef = useRef<THREE.PointLight>(null);
   const mouse = useMouse();
 
-  //Load the model
-  const { nodes, materials } = useGLTF(modelUrl) as any;
+  // Load the model
+  const { scene, nodes, materials } = useGLTF(modelUrl) as any;
+
+  // Get quality settings from store
+  const qualitySettings = useStore((state) => state.qualitySettings);
+
+  // Optimize model on load
+  useEffect(() => {
+    if (scene) {
+      optimizeModel(scene, {
+        enableBackfaceCulling: true,
+        simplifyShaders: qualitySettings.useSimplifiedShaders,
+      });
+    }
+  }, [scene, qualitySettings.useSimplifiedShaders]);
 
   // Animate light color, mouse tracking, and floating
   useFrame((state) => {
@@ -33,23 +48,29 @@ const CNCScene: React.FC = () => {
 
     // Mouse tracking and floating
     if (groupRef.current) {
-      // Mouse-based rotation (subtle)
-      const targetRotationY = -0.4 + mouse.x * 0.3;
-      const targetRotationX = mouse.y * 0.2;
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(
-        groupRef.current.rotation.y,
-        targetRotationY,
-        0.05
-      );
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(
-        groupRef.current.rotation.x,
-        targetRotationX,
-        0.05
-      );
+      // Mouse-based rotation (subtle) - only if enabled
+      if (qualitySettings.enableMouseParallax) {
+        const targetRotationY = -0.4 + mouse.x * 0.3;
+        const targetRotationX = mouse.y * 0.2;
+        groupRef.current.rotation.y = THREE.MathUtils.lerp(
+          groupRef.current.rotation.y,
+          targetRotationY,
+          0.05
+        );
+        groupRef.current.rotation.x = THREE.MathUtils.lerp(
+          groupRef.current.rotation.x,
+          targetRotationX,
+          0.05
+        );
+      }
 
-      // Floating effect
-      const floatY = Math.sin(elapsed * 0.5) * 0.1;
-      groupRef.current.position.y = -2.3 + floatY;
+      // Floating effect - only if enabled
+      if (qualitySettings.enableFloating) {
+        const floatY = Math.sin(elapsed * 0.5) * 0.1;
+        groupRef.current.position.y = -2.3 + floatY;
+      } else {
+        groupRef.current.position.y = -2.3;
+      }
     }
   });
 

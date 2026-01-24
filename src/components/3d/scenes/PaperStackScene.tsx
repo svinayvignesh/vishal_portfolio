@@ -4,6 +4,7 @@ import { useGLTF, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
 import { useStore } from '@/store/useStore';
 import { useMouse } from '@/hooks/use-mouse';
+import { optimizeModel } from '@/utils/modelOptimizer';
 // @ts-ignore
 import modelUrl from '/models/document_file_folder/document_file_folder-transformed.glb?url';
 
@@ -15,8 +16,21 @@ const PaperStackScene: React.FC = () => {
   const mouse = useMouse();
 
   // Load optimized model with animations
-  const { nodes, materials, animations } = useGLTF(modelUrl) as any;
+  const { scene, nodes, materials, animations } = useGLTF(modelUrl) as any;
   const { actions, names } = useAnimations(animations, groupRef);
+
+  // Get quality settings from store
+  const qualitySettings = useStore((state) => state.qualitySettings);
+
+  // Optimize model on load
+  useEffect(() => {
+    if (scene) {
+      optimizeModel(scene, {
+        enableBackfaceCulling: true,
+        simplifyShaders: qualitySettings.useSimplifiedShaders,
+      });
+    }
+  }, [scene, qualitySettings.useSimplifiedShaders]);
 
   // Initialize animation for scroll-driven control
   useEffect(() => {
@@ -65,27 +79,32 @@ const PaperStackScene: React.FC = () => {
     if (!isVisible) return;
 
     if (groupRef.current) {
-      // Mouse-based rotation (subtle, applied to base rotation)
+      // Mouse-based rotation (subtle, applied to base rotation) - only if enabled
       const baseRotationX = 0.9;
       const baseRotationY = 0.2;
-      const baseRotationZ = 0.15;
 
-      const targetRotationY = baseRotationY + mouse.x * 0.15;
-      const targetRotationX = baseRotationX + mouse.y * 0.1;
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(
-        groupRef.current.rotation.y,
-        targetRotationY,
-        0.05
-      );
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(
-        groupRef.current.rotation.x,
-        targetRotationX,
-        0.05
-      );
+      if (qualitySettings.enableMouseParallax) {
+        const targetRotationY = baseRotationY + mouse.x * 0.15;
+        const targetRotationX = baseRotationX + mouse.y * 0.1;
+        groupRef.current.rotation.y = THREE.MathUtils.lerp(
+          groupRef.current.rotation.y,
+          targetRotationY,
+          0.05
+        );
+        groupRef.current.rotation.x = THREE.MathUtils.lerp(
+          groupRef.current.rotation.x,
+          targetRotationX,
+          0.05
+        );
+      }
 
-      // Gentle floating animation (combined with existing)
-      const floatY = Math.sin(elapsed * 0.3) * 0.1;
-      groupRef.current.position.y = floatY;
+      // Gentle floating animation - only if enabled
+      if (qualitySettings.enableFloating) {
+        const floatY = Math.sin(elapsed * 0.3) * 0.1;
+        groupRef.current.position.y = floatY;
+      } else {
+        groupRef.current.position.y = 0;
+      }
 
       if (names.length > 0) {
         const action = actions[names[0]];

@@ -98,6 +98,19 @@ const SceneTransition: React.FC<{
 const StageManager: React.FC = () => {
   const { activeSceneId, sectionProgress, currentSection } = useStore();
 
+  // Debounce scene mounting to prevent rapid mount/unmount during fast scrolling
+  const [stableActiveSceneId, setStableActiveSceneId] = useState(activeSceneId);
+  const debounceTimerRef = useRef<number>();
+
+  useEffect(() => {
+    clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = window.setTimeout(() => {
+      setStableActiveSceneId(activeSceneId);
+    }, 150); // Only update after 150ms of stability
+
+    return () => clearTimeout(debounceTimerRef.current);
+  }, [activeSceneId]);
+
   // Scene order for determining which scenes to mount
   const sceneOrder = ['hero', 'paper-stack', '3d-printer', 'cnc-machine', 'roofing-sheets', 'gas-turbine', 'automotive'];
 
@@ -105,7 +118,8 @@ const StageManager: React.FC = () => {
   const renderScene = (id: string, Component: React.FC<any>, slideFrom: 'left' | 'right' | 'none' = 'none') => {
     // Performance optimization: Only mount active scene + adjacent scenes
     // This reduces useFrame callbacks from 7 to ~3 and cuts GPU memory usage by 70%
-    const activeIndex = sceneOrder.indexOf(activeSceneId);
+    // Use stableActiveSceneId instead of activeSceneId to prevent rapid mount/unmount during fast scrolling
+    const activeIndex = sceneOrder.indexOf(stableActiveSceneId);
     const sceneIndex = sceneOrder.indexOf(id);
 
     // Mount scenes within distance of 1 from active scene (or always mount hero)

@@ -1,8 +1,10 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useMouse } from '@/hooks/use-mouse';
+import { useStore } from '@/store/useStore';
+import { optimizeModel } from '@/utils/modelOptimizer';
 // @ts-ignore
 import modelUrl from '/models/aluminum_furnace/schaefer_gas_aluminum_furnace-transformed.glb?url';
 
@@ -11,7 +13,20 @@ const RoofingScene: React.FC = () => {
   const mouse = useMouse();
 
   // Load the model
-  const { nodes, materials } = useGLTF(modelUrl) as any;
+  const { scene, nodes, materials } = useGLTF(modelUrl) as any;
+
+  // Get quality settings from store
+  const qualitySettings = useStore((state) => state.qualitySettings);
+
+  // Optimize model on load
+  useEffect(() => {
+    if (scene) {
+      optimizeModel(scene, {
+        enableBackfaceCulling: true,
+        simplifyShaders: qualitySettings.useSimplifiedShaders,
+      });
+    }
+  }, [scene, qualitySettings.useSimplifiedShaders]);
 
   // Mouse tracking and floating animation
   useFrame((state) => {
@@ -26,23 +41,29 @@ const RoofingScene: React.FC = () => {
       // Base rotation values
       const baseRotationX = 0.2792526803190927;
 
-      // Mouse-based rotation (subtle)
-      const targetRotationY = mouse.x * 0.2;
-      const targetRotationX = baseRotationX + mouse.y * 0.15;
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(
-        groupRef.current.rotation.y,
-        targetRotationY,
-        0.05
-      );
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(
-        groupRef.current.rotation.x,
-        targetRotationX,
-        0.05
-      );
+      // Mouse-based rotation (subtle) - only if enabled
+      if (qualitySettings.enableMouseParallax) {
+        const targetRotationY = mouse.x * 0.2;
+        const targetRotationX = baseRotationX + mouse.y * 0.15;
+        groupRef.current.rotation.y = THREE.MathUtils.lerp(
+          groupRef.current.rotation.y,
+          targetRotationY,
+          0.05
+        );
+        groupRef.current.rotation.x = THREE.MathUtils.lerp(
+          groupRef.current.rotation.x,
+          targetRotationX,
+          0.05
+        );
+      }
 
-      // Floating effect
-      const floatY = Math.sin(elapsed * 0.5) * 0.08;
-      groupRef.current.position.y = -1.5 + floatY;
+      // Floating effect - only if enabled
+      if (qualitySettings.enableFloating) {
+        const floatY = Math.sin(elapsed * 0.5) * 0.08;
+        groupRef.current.position.y = -1.5 + floatY;
+      } else {
+        groupRef.current.position.y = -1.5;
+      }
     }
   });
 

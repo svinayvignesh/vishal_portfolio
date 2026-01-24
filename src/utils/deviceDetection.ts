@@ -7,6 +7,13 @@ export interface QualitySettings {
   envIntensity: number;
   maxLights: number;
   pixelRatio: number;
+  // New performance options
+  enableMouseParallax: boolean;
+  enableFloating: boolean;
+  maxDrawCalls: number;
+  textureMaxSize: number;
+  useSimplifiedShaders: boolean;
+  targetFPS: number;
 }
 
 /**
@@ -60,6 +67,13 @@ export const getQualitySettings = (performance: PerformanceLevel): QualitySettin
       envIntensity: 0.1, // Minimal environment reflections
       maxLights: 2, // Only 2 lights total
       pixelRatio: 1,
+      // Performance optimizations for low-end devices
+      enableMouseParallax: false, // Disable mouse tracking
+      enableFloating: false, // Disable sine animations
+      maxDrawCalls: 20, // Force LOD switching
+      textureMaxSize: 512, // Downsample textures
+      useSimplifiedShaders: true, // Use basic materials instead of PBR
+      targetFPS: 30, // Target 30 FPS instead of 60
     },
     medium: {
       dpr: [1, 1.5], // Limited super-sampling
@@ -68,6 +82,12 @@ export const getQualitySettings = (performance: PerformanceLevel): QualitySettin
       envIntensity: 0.3, // Moderate environment reflections
       maxLights: 3, // Up to 3 lights
       pixelRatio: 1.5,
+      enableMouseParallax: true,
+      enableFloating: true,
+      maxDrawCalls: 40,
+      textureMaxSize: 1024,
+      useSimplifiedShaders: false,
+      targetFPS: 60,
     },
     high: {
       dpr: [1, 2], // Full super-sampling on high-DPI
@@ -76,6 +96,12 @@ export const getQualitySettings = (performance: PerformanceLevel): QualitySettin
       envIntensity: 0.5, // Full environment reflections
       maxLights: 4, // Up to 4 lights
       pixelRatio: 2,
+      enableMouseParallax: true,
+      enableFloating: true,
+      maxDrawCalls: 100,
+      textureMaxSize: 2048,
+      useSimplifiedShaders: false,
+      targetFPS: 60,
     },
   };
 

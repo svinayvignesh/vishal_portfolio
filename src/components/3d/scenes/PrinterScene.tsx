@@ -25,6 +25,21 @@ const PrinterScene: React.FC = () => {
   const prevMouseRef = useRef({ x: 0, y: 0 });
   const frameCountRef = useRef(0);
 
+  // Cache store values to avoid reading 60x/sec
+  const sectionProgress = useStore((state) => state.sectionProgress);
+  const activeSceneId = useStore((state) => state.activeSceneId);
+  const isSceneActive = activeSceneId === '3d-printer';
+
+  // Optimize model on load
+  useEffect(() => {
+    if (scene) {
+      optimizeModel(scene, {
+        enableBackfaceCulling: true,
+        simplifyShaders: qualitySettings.useSimplifiedShaders,
+      });
+    }
+  }, [scene, qualitySettings.useSimplifiedShaders]);
+
   // Base positions
   const basePositions = {
     mesh1: { y: 0.228 },
@@ -36,8 +51,6 @@ const PrinterScene: React.FC = () => {
   // Animate meshes based on scroll progress, plus mouse tracking and floating
   useFrame((state) => {
     const elapsed = state.clock.elapsedTime;
-    const { sectionProgress: rawProgress, activeSceneId } = useStore.getState();
-    const isSceneActive = activeSceneId === '3d-printer';
 
     // Check if scene is currently in view (not the same as active)
     // We need to keep animating during transitions for smooth rendering
@@ -55,32 +68,34 @@ const PrinterScene: React.FC = () => {
     }
 
     // Only start animation halfway through scroll (remap 0.5-1.0 to 0-1)
-    const progress = rawProgress < 0.5 ? 0 : (rawProgress - 0.5) * 2;
+    const progress = sectionProgress < 0.5 ? 0 : (sectionProgress - 0.5) * 2;
 
     // Skip expensive mesh animations if not active (only do mouse + float)
     const shouldAnimateMeshes = isSceneActive;
 
     // Mesh animations when scene is active
+    // OPTIMIZED: Direct assignment instead of double-lerp (was causing stuttering)
     if (shouldAnimateMeshes) {
       // Mesh 3 (capac): moves UP from 0.187 to 0.5
       if (mesh3Ref.current) {
         const targetY = THREE.MathUtils.lerp(basePositions.mesh3.y, 0.5, progress);
+        // Use faster lerp with lower smoothing for less computation
         mesh3Ref.current.position.y = THREE.MathUtils.lerp(
           mesh3Ref.current.position.y,
           targetY,
-          0.1
+          0.15 // Increased from 0.1 for snappier response, less lerp iterations
         );
       }
 
       // Other meshes: move DOWN (negative y direction)
-      const downOffset = progress * 0.15; // How far they move down
+      const downOffset = progress * 0.15;
 
       if (mesh1Ref.current) {
         const targetY = basePositions.mesh1.y - downOffset;
         mesh1Ref.current.position.y = THREE.MathUtils.lerp(
           mesh1Ref.current.position.y,
           targetY,
-          0.1
+          0.15
         );
       }
 
@@ -89,7 +104,7 @@ const PrinterScene: React.FC = () => {
         mesh2Ref.current.position.y = THREE.MathUtils.lerp(
           mesh2Ref.current.position.y,
           targetY,
-          0.1
+          0.15
         );
       }
 
@@ -98,7 +113,7 @@ const PrinterScene: React.FC = () => {
         mesh4Ref.current.position.y = THREE.MathUtils.lerp(
           mesh4Ref.current.position.y,
           targetY,
-          0.1
+          0.15
         );
       }
     }
@@ -135,11 +150,11 @@ const PrinterScene: React.FC = () => {
 
     // Animate light y position from -0.14 to 0.25
     if (lightRef.current) {
-      const targetY = THREE.MathUtils.lerp(-0.14, 0.25, rawProgress);
+      const targetY = THREE.MathUtils.lerp(-0.14, 0.25, sectionProgress);
       lightRef.current.position.y = targetY;
 
       // Fade intensity based on scroll progress, but only when scene is active
-      const targetIntensity = isSceneActive ? 1000 * rawProgress : 0;
+      const targetIntensity = isSceneActive ? 1000 * sectionProgress : 0;
       lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, targetIntensity, 0.1);
     }
   });

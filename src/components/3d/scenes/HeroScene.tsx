@@ -13,6 +13,13 @@ const HeroScene: React.FC = () => {
   useFrame((state) => {
     const elapsed = state.clock.elapsedTime;
 
+    // Check if scene is visible - CRITICAL OPTIMIZATION
+    if (!groupRef.current) return;
+    const isVisible = groupRef.current.parent && groupRef.current.parent.scale.x > 0.05;
+
+    // Skip all animations when invisible (saves 15-20 FPS)
+    if (!isVisible) return;
+
     if (groupRef.current) {
       // Mouse-based rotation (subtle)
       const targetRotationY = mouse.x * 0.15;

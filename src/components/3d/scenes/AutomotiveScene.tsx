@@ -1,9 +1,10 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useMouse } from '@/hooks/use-mouse';
 import { useStore } from '@/store/useStore';
+import { optimizeModel } from '@/utils/modelOptimizer';
 // @ts-ignore
 import modelUrl from '/models/ford/ford_f150_raptor-transformed.glb?url';
 
@@ -13,11 +14,32 @@ const AutomotiveScene: React.FC = () => {
   const mouse = useMouse();
 
   // Load the model
-  const { nodes, materials } = useGLTF(modelUrl) as any;
+  const { scene, nodes, materials } = useGLTF(modelUrl) as any;
+
+  // Get quality settings from store
+  const qualitySettings = useStore((state) => state.qualitySettings);
 
   // Cache previous frame values to skip unchanged calculations
   const prevMouseRef = useRef({ x: 0, y: 0 });
   const frameCountRef = useRef(0);
+
+  // Optimize model on load
+  useEffect(() => {
+    if (scene) {
+      optimizeModel(scene, {
+        enableBackfaceCulling: true,
+        simplifyShaders: qualitySettings.useSimplifiedShaders,
+        hiddenMeshNames: [
+          'console',      // Interior console
+          'pedals',       // Interior pedals
+          'carpet',       // Interior carpet
+          'stitch',       // Seat stitching (too small to see)
+          'rivet',        // Rivets (too small to see)
+          'undercarriage', // Bottom of car (never visible)
+        ],
+      });
+    }
+  }, [scene, qualitySettings.useSimplifiedShaders]);
 
   // Animate mouse tracking and floating
   useFrame((state) => {
@@ -56,31 +78,35 @@ const AutomotiveScene: React.FC = () => {
       const baseRotationX = -2.9722319608769;
       const baseRotationY = -0.4687061236053624;
 
-      // Only update rotation if mouse moved significantly (threshold 0.01)
-      const mouseDeltaX = Math.abs(mouse.x - prevMouseRef.current.x);
-      const mouseDeltaY = Math.abs(mouse.y - prevMouseRef.current.y);
+      // Only update rotation if mouse parallax is enabled and mouse moved significantly
+      if (qualitySettings.enableMouseParallax) {
+        const mouseDeltaX = Math.abs(mouse.x - prevMouseRef.current.x);
+        const mouseDeltaY = Math.abs(mouse.y - prevMouseRef.current.y);
 
-      if (mouseDeltaX > 0.01 || mouseDeltaY > 0.01) {
-        const targetRotationY = baseRotationY + mouse.x * 0.2;
-        const targetRotationX = baseRotationX + mouse.y * 0.15;
-        groupRef.current.rotation.y = THREE.MathUtils.lerp(
-          groupRef.current.rotation.y,
-          targetRotationY,
-          0.05
-        );
-        groupRef.current.rotation.x = THREE.MathUtils.lerp(
-          groupRef.current.rotation.x,
-          targetRotationX,
-          0.05
-        );
-        prevMouseRef.current = { x: mouse.x, y: mouse.y };
+        if (mouseDeltaX > 0.01 || mouseDeltaY > 0.01) {
+          const targetRotationY = baseRotationY + mouse.x * 0.2;
+          const targetRotationX = baseRotationX + mouse.y * 0.15;
+          groupRef.current.rotation.y = THREE.MathUtils.lerp(
+            groupRef.current.rotation.y,
+            targetRotationY,
+            0.05
+          );
+          groupRef.current.rotation.x = THREE.MathUtils.lerp(
+            groupRef.current.rotation.x,
+            targetRotationX,
+            0.05
+          );
+          prevMouseRef.current = { x: mouse.x, y: mouse.y };
+        }
       }
 
-      // Floating effect - only calculate every 2nd frame
-      frameCountRef.current++;
-      if (frameCountRef.current % 2 === 0) {
-        const floatY = Math.sin(elapsed * 0.5) * 0.08;
-        groupRef.current.position.y = floatY;
+      // Floating effect - only calculate if enabled and every 2nd frame
+      if (qualitySettings.enableFloating) {
+        frameCountRef.current++;
+        if (frameCountRef.current % 2 === 0) {
+          const floatY = Math.sin(elapsed * 0.5) * 0.08;
+          groupRef.current.position.y = floatY;
+        }
       }
     }
   });

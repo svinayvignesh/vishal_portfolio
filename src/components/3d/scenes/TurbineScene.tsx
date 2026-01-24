@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useStore } from '@/store/useStore';
 import { useMouse } from '@/hooks/use-mouse';
+import { optimizeModel } from '@/utils/modelOptimizer';
 // @ts-ignore
 import modelUrl from '/models/turbine/turbine-transformed.glb?url';
 
@@ -13,8 +14,21 @@ const TurbineScene: React.FC = () => {
   const mouse = useMouse();
 
   // Load the model (including animations)
-  const { nodes, materials, animations } = useGLTF(modelUrl) as any;
+  const { scene, nodes, materials, animations } = useGLTF(modelUrl) as any;
   const { actions, names } = useAnimations(animations, groupRef);
+
+  // Get quality settings from store
+  const qualitySettings = useStore((state) => state.qualitySettings);
+
+  // Optimize model on load
+  useEffect(() => {
+    if (scene) {
+      optimizeModel(scene, {
+        enableBackfaceCulling: true,
+        simplifyShaders: qualitySettings.useSimplifiedShaders,
+      });
+    }
+  }, [scene, qualitySettings.useSimplifiedShaders]);
 
   // Initialize animation action and scrub it based on scroll progress
   useEffect(() => {
@@ -59,25 +73,30 @@ const TurbineScene: React.FC = () => {
       // Base rotation values
       const baseRotationX = 0.5;
       const baseRotationY = -1.3;
-      const baseRotationZ = 0.15;
 
-      // Mouse-based rotation (subtle)
-      const targetRotationY = baseRotationY + mouse.x * 0.2;
-      const targetRotationX = baseRotationX + mouse.y * 0.15;
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(
-        groupRef.current.rotation.y,
-        targetRotationY,
-        0.05
-      );
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(
-        groupRef.current.rotation.x,
-        targetRotationX,
-        0.05
-      );
+      // Mouse-based rotation (subtle) - only if enabled
+      if (qualitySettings.enableMouseParallax) {
+        const targetRotationY = baseRotationY + mouse.x * 0.2;
+        const targetRotationX = baseRotationX + mouse.y * 0.15;
+        groupRef.current.rotation.y = THREE.MathUtils.lerp(
+          groupRef.current.rotation.y,
+          targetRotationY,
+          0.05
+        );
+        groupRef.current.rotation.x = THREE.MathUtils.lerp(
+          groupRef.current.rotation.x,
+          targetRotationX,
+          0.05
+        );
+      }
 
-      // Floating effect
-      const floatY = Math.sin(elapsed * 0.5) * 0.08;
-      groupRef.current.position.y = floatY;
+      // Floating effect - only if enabled
+      if (qualitySettings.enableFloating) {
+        const floatY = Math.sin(elapsed * 0.5) * 0.08;
+        groupRef.current.position.y = floatY;
+      } else {
+        groupRef.current.position.y = 0;
+      }
     }
 
     // Fade light intensity in and out based on whether scene is active

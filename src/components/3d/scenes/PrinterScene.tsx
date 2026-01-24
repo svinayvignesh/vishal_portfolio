@@ -1,9 +1,10 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useStore } from '@/store/useStore';
 import { useMouse } from '@/hooks/use-mouse';
+import { optimizeModel } from '@/utils/modelOptimizer';
 // @ts-ignore
 import modelUrl from '/models/resin_3d_printer/resin_3d_printer-transformed.glb?url';
 
@@ -19,11 +20,24 @@ const PrinterScene: React.FC = () => {
   const mesh4Ref = useRef<THREE.Mesh>(null);
 
   // Load optimized model
-  const { nodes, materials } = useGLTF(modelUrl) as any;
+  const { scene, nodes, materials } = useGLTF(modelUrl) as any;
+
+  // Get quality settings from store
+  const qualitySettings = useStore((state) => state.qualitySettings);
 
   // Cache previous frame values to skip unchanged calculations
   const prevMouseRef = useRef({ x: 0, y: 0 });
   const frameCountRef = useRef(0);
+
+  // Optimize model on load
+  useEffect(() => {
+    if (scene) {
+      optimizeModel(scene, {
+        enableBackfaceCulling: true,
+        simplifyShaders: qualitySettings.useSimplifiedShaders,
+      });
+    }
+  }, [scene, qualitySettings.useSimplifiedShaders]);
 
   // Base positions
   const basePositions = {
@@ -105,31 +119,38 @@ const PrinterScene: React.FC = () => {
 
     // Mouse tracking and floating on group
     if (groupRef.current) {
-      // Only update rotation if mouse moved significantly (threshold 0.01)
-      const mouseDeltaX = Math.abs(mouse.x - prevMouseRef.current.x);
-      const mouseDeltaY = Math.abs(mouse.y - prevMouseRef.current.y);
+      // Only update rotation if mouse parallax is enabled and mouse moved significantly
+      if (qualitySettings.enableMouseParallax) {
+        const mouseDeltaX = Math.abs(mouse.x - prevMouseRef.current.x);
+        const mouseDeltaY = Math.abs(mouse.y - prevMouseRef.current.y);
 
-      if (mouseDeltaX > 0.01 || mouseDeltaY > 0.01) {
-        const targetRotationY = mouse.x * 0.2;
-        const targetRotationX = mouse.y * 0.15;
-        groupRef.current.rotation.y = THREE.MathUtils.lerp(
-          groupRef.current.rotation.y,
-          targetRotationY,
-          0.05
-        );
-        groupRef.current.rotation.x = THREE.MathUtils.lerp(
-          groupRef.current.rotation.x,
-          targetRotationX,
-          0.05
-        );
-        prevMouseRef.current = { x: mouse.x, y: mouse.y };
+        if (mouseDeltaX > 0.01 || mouseDeltaY > 0.01) {
+          const targetRotationY = mouse.x * 0.2;
+          const targetRotationX = mouse.y * 0.15;
+          groupRef.current.rotation.y = THREE.MathUtils.lerp(
+            groupRef.current.rotation.y,
+            targetRotationY,
+            0.05
+          );
+          groupRef.current.rotation.x = THREE.MathUtils.lerp(
+            groupRef.current.rotation.x,
+            targetRotationX,
+            0.05
+          );
+          prevMouseRef.current = { x: mouse.x, y: mouse.y };
+        }
       }
 
-      // Floating effect - only calculate every 2nd frame
-      frameCountRef.current++;
-      if (frameCountRef.current % 2 === 0) {
-        const floatY = Math.sin(elapsed * 0.5) * 0.05;
-        groupRef.current.position.y = -1.5 + floatY;
+      // Floating effect - only calculate if enabled and every 2nd frame
+      if (qualitySettings.enableFloating) {
+        frameCountRef.current++;
+        if (frameCountRef.current % 2 === 0) {
+          const floatY = Math.sin(elapsed * 0.5) * 0.05;
+          groupRef.current.position.y = -1.5 + floatY;
+        }
+      } else {
+        // Keep static position if floating is disabled
+        groupRef.current.position.y = -1.5;
       }
     }
 

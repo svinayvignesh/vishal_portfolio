@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { portfolioData } from '@/data/portfolioData';
+import { detectDevicePerformance, getQualitySettings, type PerformanceLevel, type QualitySettings } from '@/utils/deviceDetection';
 
 interface ScrollState {
   // Current section index (0-based)
@@ -14,6 +15,9 @@ interface ScrollState {
   activeSceneId: string;
   // Total number of sections
   totalSections: number;
+  // Performance level and quality settings
+  performanceLevel: PerformanceLevel;
+  qualitySettings: QualitySettings;
 
   // Actions
   setCurrentSection: (section: number) => void;
@@ -23,13 +27,19 @@ interface ScrollState {
   setActiveSceneId: (sceneId: string) => void;
 }
 
-export const useStore = create<ScrollState>((set) => ({
-  currentSection: 0,
-  sectionProgress: 0,
-  totalProgress: 0,
-  isScrolling: false,
-  activeSceneId: 'hero', // Start with hero scene by default
-  totalSections: portfolioData.roles.length + 2, // roles + hero + contact
+export const useStore = create<ScrollState>((set) => {
+  const performanceLevel = detectDevicePerformance();
+  const qualitySettings = getQualitySettings(performanceLevel);
+
+  return {
+    currentSection: 0,
+    sectionProgress: 0,
+    totalProgress: 0,
+    isScrolling: false,
+    activeSceneId: 'hero', // Start with hero scene by default
+    totalSections: portfolioData.roles.length + 2, // roles + hero + contact
+    performanceLevel,
+    qualitySettings,
 
   setCurrentSection: (section) => {
     // If we are in the Hero section (section 0) or Contact section (last section),
@@ -44,8 +54,9 @@ export const useStore = create<ScrollState>((set) => ({
     const sceneId = portfolioData.roles[roleIndex]?.sceneId || 'hero';
     set({ currentSection: section, activeSceneId: sceneId });
   },
-  setSectionProgress: (progress) => set({ sectionProgress: progress }),
-  setTotalProgress: (progress) => set({ totalProgress: progress }),
-  setIsScrolling: (isScrolling) => set({ isScrolling }),
-  setActiveSceneId: (sceneId) => set({ activeSceneId: sceneId }),
-}));
+    setSectionProgress: (progress) => set({ sectionProgress: progress }),
+    setTotalProgress: (progress) => set({ totalProgress: progress }),
+    setIsScrolling: (isScrolling) => set({ isScrolling }),
+    setActiveSceneId: (sceneId) => set({ activeSceneId: sceneId }),
+  };
+});

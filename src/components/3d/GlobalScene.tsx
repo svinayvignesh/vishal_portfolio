@@ -1,10 +1,36 @@
-import React, { Suspense, useRef } from 'react';
-import { Canvas } from '@react-three/fiber';
+import React, { Suspense, useRef, useEffect } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { Preload, Environment } from '@react-three/drei';
+import * as THREE from 'three';
 import StageManager from './StageManager';
 
 import { useIsMobile } from '@/hooks/use-mobile';
 import { detectDevicePerformance, getQualitySettings } from '@/utils/deviceDetection';
+import { useStore } from '@/store/useStore';
+
+/**
+ * Frame rate controller for low-end devices
+ * Limits rendering to targetFPS to reduce GPU load
+ */
+function FrameRateLimiter() {
+  const qualitySettings = useStore((state) => state.qualitySettings);
+  const lastFrameTimeRef = useRef(0);
+
+  useFrame((state) => {
+    const targetFPS = qualitySettings.targetFPS;
+    const frameInterval = 1000 / targetFPS;
+    const currentTime = performance.now();
+
+    // Skip frames if we're rendering too fast
+    if (currentTime - lastFrameTimeRef.current < frameInterval) {
+      return;
+    }
+
+    lastFrameTimeRef.current = currentTime;
+  });
+
+  return null;
+}
 
 const GlobalScene: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -31,11 +57,31 @@ const GlobalScene: React.FC = () => {
         gl={{
           antialias: quality.antialias,
           alpha: true,
-          powerPreference: 'high-performance'
+          powerPreference: 'high-performance',
+          // Additional performance optimizations
+          stencil: false, // Disable stencil buffer if not needed
+          depth: true,
+          logarithmicDepthBuffer: false, // Disable if not needed
         }}
         shadows={quality.shadows}
+        frameloop="always" // Always render (frameloop="demand" would be more efficient but may cause issues)
+        onCreated={({ gl, scene }) => {
+          // Enable hardware acceleration
+          gl.setClearColor('#000000', 0);
+
+          // Optimize scene rendering
+          scene.traverse((obj) => {
+            if (obj instanceof THREE.Mesh) {
+              // Enable frustum culling
+              obj.frustumCulled = true;
+            }
+          });
+        }}
       >
         <Suspense fallback={null}>
+          {/* Frame rate limiter for low-end devices */}
+          {quality.targetFPS < 60 && <FrameRateLimiter />}
+
           {/* Ambient Light - Adjusted for performance */}
           <ambientLight intensity={isDark ? 0.4 : 1.2} />
 
@@ -48,14 +94,18 @@ const GlobalScene: React.FC = () => {
           />
 
           {/* Rim/Accent Light - Reduced from 2 point lights to 1 */}
-          <pointLight
-            position={[-5, 5, 5]}
-            intensity={isDark ? 2.0 : 0.4}
-            color={isDark ? "#d4a574" : "#ffaa66"}
-          />
+          {quality.maxLights >= 2 && (
+            <pointLight
+              position={[-5, 5, 5]}
+              intensity={isDark ? 2.0 : 0.4}
+              color={isDark ? "#d4a574" : "#ffaa66"}
+            />
+          )}
 
           {/* Environment map with adaptive intensity based on device performance */}
-          <Environment preset={isDark ? "city" : "studio"} environmentIntensity={quality.envIntensity} />
+          {quality.envIntensity > 0 && (
+            <Environment preset={isDark ? "city" : "studio"} environmentIntensity={quality.envIntensity} />
+          )}
 
           {/* Scene manager handles all 3D scene transitions */}
           <StageManager />

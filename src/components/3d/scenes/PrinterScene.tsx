@@ -154,13 +154,7 @@ const PrinterScene: React.FC = () => {
         rotation={[-Math.PI / 2, Math.PI / 2, 0]}
         scale={1.25}
       />
-      <mesh
-        ref={mesh2Ref}
-        geometry={nodes.baza_lcd_0.geometry}
-        material={materials.material}
-        position={[0, -0.008, 0.095]}
-        rotation={[-Math.PI / 2, 0, 0]}
-      />
+
       <mesh
         ref={mesh3Ref}
         geometry={nodes.capac_Material029_0.geometry}
@@ -168,13 +162,7 @@ const PrinterScene: React.FC = () => {
         position={[0, 0.187, 0.095]}
         rotation={[-Math.PI / 2, 0, 0]}
       />
-      <mesh
-        ref={mesh4Ref}
-        geometry={nodes.BUTTON_Material004_0.geometry}
-        material={materials.PaletteMaterial003}
-        position={[0.048, -0.052, 0.191]}
-        scale={0.001}
-      />
+
 
       {/* Single accent light for performance - removed 2 static point lights */}
       <pointLight ref={lightRef} position={[0.14, -0.14, 0.29]} intensity={0} color={"#ffffff"} />

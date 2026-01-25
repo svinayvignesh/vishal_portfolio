@@ -11,6 +11,7 @@ import modelUrl from '/models/resin_3d_printer/resin_3d_printer-transformed.glb?
 const PrinterScene: React.FC = () => {
   const groupRef = useRef<THREE.Group>(null);
   const lightRef = useRef<THREE.PointLight>(null);
+  const directionalLightRef = useRef<THREE.DirectionalLight>(null);
   const mouse = useMouse();
 
   // Refs for individual meshes to animate
@@ -80,8 +81,20 @@ const PrinterScene: React.FC = () => {
       if (lightRef.current && lightRef.current.intensity > 0.01) {
         lightRef.current.intensity *= 0.9;
       }
+      if (directionalLightRef.current && directionalLightRef.current.intensity > 0.01) {
+        directionalLightRef.current.intensity *= 0.9;
+      }
       return;
     }
+
+    // Calculate fade factor: fade in from 0-0.15, full brightness 0.15-0.85, fade out 0.85-1.0
+    let fadeFactor = 1;
+    if (sectionProgress < 0.15) {
+      fadeFactor = sectionProgress / 0.15; // Fade in
+    } else if (sectionProgress > 0.85) {
+      fadeFactor = (1 - sectionProgress) / 0.15; // Fade out
+    }
+    fadeFactor = THREE.MathUtils.clamp(fadeFactor, 0, 1);
 
     // Only start animation halfway through scroll (remap 0.5-1.0 to 0-1)
     const progress = sectionProgress < 0.5 ? 0 : (sectionProgress - 0.5) * 2;
@@ -189,9 +202,19 @@ const PrinterScene: React.FC = () => {
       const targetY = THREE.MathUtils.lerp(-0.14, 0.25, sectionProgress);
       lightRef.current.position.y = targetY;
 
-      // Fade intensity based on scroll progress, but only when scene is active
-      const targetIntensity = isSceneActive ? 1000 * sectionProgress : 0;
+      // Fade intensity based on scroll progress with fade factor, but only when scene is active
+      const targetIntensity = isSceneActive ? 1000 * sectionProgress * fadeFactor : 0;
       lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, targetIntensity, 0.1);
+    }
+
+    // Fade directional light
+    if (directionalLightRef.current) {
+      const targetIntensity = isSceneActive ? 10 * fadeFactor : 0;
+      directionalLightRef.current.intensity = THREE.MathUtils.lerp(
+        directionalLightRef.current.intensity,
+        targetIntensity,
+        0.1
+      );
     }
   });
 
@@ -200,7 +223,7 @@ const PrinterScene: React.FC = () => {
       {/* Local ambient light for this model */}
 
       {/* Directional light - configure position and angle as needed */}
-      <directionalLight position={[0.09, 0.27170478794734, 0.515761348478841]} intensity={10} />
+      <directionalLight ref={directionalLightRef} position={[0.09, 0.27170478794734, 0.515761348478841]} intensity={0} />
 
       <mesh
         ref={mesh1Ref}

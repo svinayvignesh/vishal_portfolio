@@ -11,6 +11,7 @@ import modelUrl from '/models/turbine/turbine-transformed.glb?url';
 const TurbineScene: React.FC = () => {
   const groupRef = useRef<THREE.Group>(null);
   const lightRef = useRef<THREE.PointLight>(null);
+  const directionalLightRef = useRef<THREE.DirectionalLight>(null);
   const mouse = useMouse();
 
   // Load the model (including animations)
@@ -107,19 +108,38 @@ const TurbineScene: React.FC = () => {
       }
     }
 
+    // Calculate fade factor: fade in from 0-0.15, full brightness 0.15-0.85, fade out 0.85-1.0
+    let fadeFactor = 1;
+    if (sectionProgress < 0.15) {
+      fadeFactor = sectionProgress / 0.15; // Fade in
+    } else if (sectionProgress > 0.85) {
+      fadeFactor = (1 - sectionProgress) / 0.15; // Fade out
+    }
+    fadeFactor = THREE.MathUtils.clamp(fadeFactor, 0, 1);
+
     // Fade light intensity in and out based on whether scene is active
     if (lightRef.current) {
-      const targetIntensity = isSceneActive ? 2500 * sectionProgress : 0;
+      const targetIntensity = isSceneActive ? 2500 * sectionProgress * fadeFactor : 0;
       lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, targetIntensity, 0.1);
+    }
+
+    // Fade directional light
+    if (directionalLightRef.current) {
+      const targetIntensity = isSceneActive ? 10 * fadeFactor : 0;
+      directionalLightRef.current.intensity = THREE.MathUtils.lerp(
+        directionalLightRef.current.intensity,
+        targetIntensity,
+        0.1
+      );
     }
   });
 
   return (
-    <group ref={groupRef} dispose={null} rotation={[0.5, -1.3, 0.15]} scale={1} position={[0, 0.0554946383470855, 0]}>
+    <group ref={groupRef} dispose={null} rotation={[0.5, -1.3, 0.15]} scale={2} position={[0, 0.0554946383470855, 0]}>
       {/* Local ambient light for this model */}
 
       {/* Directional light - configure position and angle as needed */}
-      <directionalLight position={[5.61674027928479, 0.806349874011786, 1.22256568618356]} intensity={10} receiveShadow={false} />
+      <directionalLight ref={directionalLightRef} position={[3.37, 0.741198950952761, -0.208718930060196]} intensity={0} receiveShadow={false} color={"#f3c212"} />
 
       <group name="Sketchfab_Scene">
         <group name="turbine_01_obj">
@@ -130,7 +150,7 @@ const TurbineScene: React.FC = () => {
             <mesh name="blades_turbine_003_Nickel-Light-PBR_0" geometry={nodes['blades_turbine_003_Nickel-Light-PBR_0'].geometry} material={materials.PaletteMaterial001} />
           </group>
         </group>
-        <mesh name="hull_turbine_004_Stainlesssteel-Black-PBR_0" geometry={nodes['hull_turbine_004_Stainlesssteel-Black-PBR_0'].geometry} material={materials.PaletteMaterial001} scale={2} />
+        <mesh name="hull_turbine_004_Stainlesssteel-Black-PBR_0" geometry={nodes['hull_turbine_004_Stainlesssteel-Black-PBR_0'].geometry} material={materials.PaletteMaterial001} />
       </group>
 
     </group>

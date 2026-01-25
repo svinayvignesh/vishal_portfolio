@@ -11,6 +11,7 @@ import modelUrl from '/models/ford/ford_f150_raptor-transformed.glb?url';
 const AutomotiveScene: React.FC = () => {
   const groupRef = useRef<THREE.Group>(null);
   const lightRef = useRef<THREE.PointLight>(null);
+  const directionalLightRef = useRef<THREE.DirectionalLight>(null);
   const mouse = useMouse();
 
   // Load the model
@@ -58,19 +59,41 @@ const AutomotiveScene: React.FC = () => {
       if (lightRef.current && lightRef.current.intensity > 0.01) {
         lightRef.current.intensity *= 0.9;
       }
+      if (directionalLightRef.current && directionalLightRef.current.intensity > 0.01) {
+        directionalLightRef.current.intensity *= 0.9;
+      }
       return;
     }
 
     // Get scroll progress for light animation from store
     const { sectionProgress } = useStore.getState();
 
+    // Calculate fade factor: fade in from 0-0.15, full brightness 0.15-0.85, fade out 0.85-1.0
+    let fadeFactor = 1;
+    if (sectionProgress < 0.15) {
+      fadeFactor = sectionProgress / 0.15; // Fade in
+    } else if (sectionProgress > 0.85) {
+      fadeFactor = (1 - sectionProgress) / 0.15; // Fade out
+    }
+    fadeFactor = THREE.MathUtils.clamp(fadeFactor, 0, 1);
+
     // Scroll-driven light animation
     if (lightRef.current) {
       const targetX = THREE.MathUtils.lerp(0.8, -0.3, sectionProgress);
       lightRef.current.position.x = targetX;
 
-      const targetIntensity = 100 * sectionProgress;
+      const targetIntensity = 100 * sectionProgress * fadeFactor;
       lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, targetIntensity, 0.1);
+    }
+
+    // Fade directional light
+    if (directionalLightRef.current) {
+      const targetIntensity = 30 * fadeFactor;
+      directionalLightRef.current.intensity = THREE.MathUtils.lerp(
+        directionalLightRef.current.intensity,
+        targetIntensity,
+        0.1
+      );
     }
 
     // Mouse tracking and floating (when visible) - with frame skipping
@@ -117,19 +140,19 @@ const AutomotiveScene: React.FC = () => {
   });
 
   return (
-    <group ref={groupRef} rotation={[-3.0322319608769, -0.7, -3.06812904664661]} scale={1.7} position={[-2.12, -0.3, 0]}>
-      <mesh geometry={nodes.Object_8.geometry} material={materials.PaletteMaterial001} position={[-0.914, 1.06, -1.094]} rotation={[Math.PI / 2, 0, 0.007]} />
-      <mesh geometry={nodes.Object_14.geometry} material={materials.PaletteMaterial002} position={[-0.914, 1.06, -1.094]} rotation={[Math.PI / 2, 0, 0.007]} />
-      <mesh geometry={nodes.Object_26.geometry} material={materials['stitch.001']} position={[-0.914, 1.06, -1.094]} rotation={[Math.PI / 2, 0, 0.007]} />
-      <mesh geometry={nodes.Object_28.geometry} material={materials.PaletteMaterial003} position={[-0.914, 1.06, -1.094]} rotation={[Math.PI / 2, 0, 0.007]} />
-      <mesh geometry={nodes.Object_39.geometry} material={materials['vehicle_generic_tyrewallblack.001']} position={[-0.919, 0.476, 1.924]} rotation={[Math.PI / 2, 0, 0.005]} />
-      <mesh geometry={nodes.Object_42.geometry} material={materials['vehicle_generic_tyrewallblack.002']} position={[-0.901, 0.476, -1.827]} rotation={[-1.871, -0.136, 0.416]} />
+    <group ref={groupRef} rotation={[-3.0322319608769, -0.7, -3.06812904664661]} scale={2.3} position={[0.09, -3.28, 0]}>
+      <mesh geometry={nodes.Object_8.geometry} material={materials.PaletteMaterial001} rotation={[Math.PI / 2, 0, 0.007]} />
+      <mesh geometry={nodes.Object_14.geometry} material={materials.PaletteMaterial002} rotation={[Math.PI / 2, 0, 0.007]} />
+      <mesh geometry={nodes.Object_26.geometry} material={materials['stitch.001']} rotation={[Math.PI / 2, 0, 0.007]} />
+      <mesh geometry={nodes.Object_28.geometry} material={materials.PaletteMaterial003} rotation={[Math.PI / 2, 0, 0.007]} />
+      <mesh geometry={nodes.Object_39.geometry} material={materials['vehicle_generic_tyrewallblack.001']} rotation={[Math.PI / 2, 0, 0.005]} position={[0.0219399600554577, -0.493165768751545, -0.75]} />
+
       {/* Front-right accent light for car detail - slides across as you scroll */}
-      <pointLight ref={lightRef} position={[0.8, 1, -3]} intensity={0} color={"#1351d8"} />
-      <group dispose={null} position={[-1.62, -1.5, -1.09]} scale={2} />
+      <pointLight ref={lightRef} position={[1.76705953376299, -0.0907553081636627, -1.77]} intensity={0} color={"#1351d8"} />
+
 
       {/* Directional light - configure position and angle as needed */}
-      <directionalLight position={[-0.3, 7.48896325256458, -10.3997673754587]} intensity={30} />
+      <directionalLight ref={directionalLightRef} position={[-3.7883594057103, 3.00433744099801, -0.48]} intensity={0} />
     </group>
   );
 };

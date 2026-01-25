@@ -42,12 +42,28 @@ const CNCScene: React.FC = () => {
     const isVisible = groupRef.current.parent && groupRef.current.parent.scale.x > 0.05;
     if (!isVisible) return;
 
-    // Light color cycling
+    // Get scroll progress for fade calculation
+    const { sectionProgress } = useStore.getState();
+
+    // Calculate fade factor: fade in from 0-0.15, full brightness 0.15-0.85, fade out 0.85-1.0
+    let fadeFactor = 1;
+    if (sectionProgress < 0.15) {
+      fadeFactor = sectionProgress / 0.15; // Fade in
+    } else if (sectionProgress > 0.85) {
+      fadeFactor = (1 - sectionProgress) / 0.15; // Fade out
+    }
+    fadeFactor = THREE.MathUtils.clamp(fadeFactor, 0, 1);
+
+    // Light color cycling with fade
     if (lightRef.current) {
       const hue = (elapsed * 0.3) % 1;
       const color = new THREE.Color();
       color.setHSL(hue, 1, 0.6);
       lightRef.current.color.copy(color);
+
+      // Apply fade factor to intensity
+      const targetIntensity = 10 * fadeFactor;
+      lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, targetIntensity, 0.1);
     }
 
     // Mouse tracking and floating - with frame skipping for performance
@@ -88,7 +104,7 @@ const CNCScene: React.FC = () => {
       <mesh geometry={nodes.Object_322.geometry} material={materials.M_14___Default} position={[1.569, 1.044, 1.947]} rotation={[1.857, 0.445, 0.971]} scale={0.025} />
 
       {/* Point light for CNC machine detail - color changes over time */}
-      <pointLight ref={lightRef} position={[-0.46, 1.77, 0.236136437489527]} intensity={10} color={"#eae206"} scale={0} />
+      <pointLight ref={lightRef} position={[-0.46, 1.77, 0.236136437489527]} intensity={0} color={"#eae206"} scale={0} />
     </group>
   );
 };

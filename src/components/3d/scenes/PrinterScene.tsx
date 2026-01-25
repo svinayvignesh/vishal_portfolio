@@ -198,7 +198,9 @@ const PrinterScene: React.FC = () => {
   return (
     <group ref={groupRef} dispose={null} scale={12} position={[0, -1.5, 0]}>
       {/* Local ambient light for this model */}
-      <ambientLight intensity={2} />
+
+      {/* Directional light - configure position and angle as needed */}
+      <directionalLight position={[0.09, 0.27170478794734, 0.515761348478841]} intensity={10} />
 
       <mesh
         ref={mesh1Ref}

@@ -115,9 +115,11 @@ const TurbineScene: React.FC = () => {
   });
 
   return (
-    <group ref={groupRef} dispose={null} rotation={[0.5, -1.3, 0.15]} scale={2}>
+    <group ref={groupRef} dispose={null} rotation={[0.5, -1.3, 0.15]} scale={1} position={[0, 0.0554946383470855, 0]}>
       {/* Local ambient light for this model */}
-      <ambientLight intensity={2} />
+
+      {/* Directional light - configure position and angle as needed */}
+      <directionalLight position={[5.61674027928479, 0.806349874011786, 1.22256568618356]} intensity={10} receiveShadow={false} />
 
       <group name="Sketchfab_Scene">
         <group name="turbine_01_obj">
@@ -128,7 +130,7 @@ const TurbineScene: React.FC = () => {
             <mesh name="blades_turbine_003_Nickel-Light-PBR_0" geometry={nodes['blades_turbine_003_Nickel-Light-PBR_0'].geometry} material={materials.PaletteMaterial001} />
           </group>
         </group>
-        <mesh name="hull_turbine_004_Stainlesssteel-Black-PBR_0" geometry={nodes['hull_turbine_004_Stainlesssteel-Black-PBR_0'].geometry} material={materials.PaletteMaterial001} />
+        <mesh name="hull_turbine_004_Stainlesssteel-Black-PBR_0" geometry={nodes['hull_turbine_004_Stainlesssteel-Black-PBR_0'].geometry} material={materials.PaletteMaterial001} scale={2} />
       </group>
 
     </group>

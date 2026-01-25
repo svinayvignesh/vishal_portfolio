@@ -11,9 +11,20 @@ const GyroscopePermission: React.FC<GyroscopePermissionProps> = ({ onPermissionG
   const [permissionStatus, setPermissionStatus] = useState<'pending' | 'granted' | 'denied' | 'unavailable'>('pending');
 
   useEffect(() => {
-    // Detect platform
+    // Check if this is a mobile/tablet device (not desktop)
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent)); // iPad with desktop mode
+
+    // If not a mobile device, skip the modal entirely
+    if (!isMobileDevice) {
+      console.log('[Gyroscope] Desktop detected, skipping modal');
+      onPermissionGranted();
+      return;
+    }
+
+    // Detect iOS specifically
     const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
 
     setIsIOS(isIOSDevice);
 
@@ -29,16 +40,38 @@ const GyroscopePermission: React.FC<GyroscopePermissionProps> = ({ onPermissionG
       setPermissionStatus('granted');
       onPermissionGranted();
     } else {
-      // Android or other - check if gyroscope is available
-      // Show modal to let user opt-in to motion controls
+      // Android - show modal to let user opt-in to motion controls
       if (window.DeviceOrientationEvent) {
         setShowModal(true);
       } else {
         setPermissionStatus('unavailable');
-        onPermissionGranted(); // Still call this so app continues
+        onPermissionGranted();
       }
     }
   }, [onPermissionGranted]);
+
+  // Block body scroll when modal is open
+  useEffect(() => {
+    if (showModal) {
+      // Save current scroll position and lock body
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.overflow = 'hidden';
+
+      return () => {
+        // Restore scroll position when modal closes
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.overflow = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [showModal]);
 
   // Handle enable button click - MUST be synchronous for iOS
   const handleEnable = useCallback(() => {
@@ -77,7 +110,7 @@ const GyroscopePermission: React.FC<GyroscopePermissionProps> = ({ onPermissionG
   const handleSkip = useCallback(() => {
     console.log('[Gyroscope] Skipped');
     setShowModal(false);
-    onPermissionGranted(); // Still let app continue
+    onPermissionGranted();
   }, [onPermissionGranted]);
 
   // Don't render if modal shouldn't show
@@ -87,12 +120,30 @@ const GyroscopePermission: React.FC<GyroscopePermissionProps> = ({ onPermissionG
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] flex items-center justify-center"
       role="dialog"
       aria-modal="true"
       aria-labelledby="gyro-title"
+      style={{
+        // Ensure this blocks all interactions with content behind
+        touchAction: 'none',
+        overscrollBehavior: 'contain',
+      }}
+      // Prevent any touch/scroll events from reaching background
+      onTouchMove={(e) => e.preventDefault()}
+      onWheel={(e) => e.preventDefault()}
     >
-      <div className="card-steel p-8 max-w-md mx-4">
+      {/* Backdrop - blocks clicks */}
+      <div
+        className="absolute inset-0 bg-background/90 backdrop-blur-md"
+        onClick={handleSkip}
+      />
+
+      {/* Modal content */}
+      <div
+        className="relative card-steel p-8 max-w-md mx-4 z-10"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
             <Smartphone className="w-8 h-8 text-primary" />

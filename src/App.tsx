@@ -18,13 +18,26 @@ import { useState } from "react";
 
 const App = () => {
   const [gyroEnabled, setGyroEnabled] = useState(false);
+  const [permissionComplete, setPermissionComplete] = useState(false);
 
+  const handlePermissionGranted = () => {
+    setGyroEnabled(true);
+    setPermissionComplete(true);
+  };
+
+  // Show only the permission prompt until permission is granted/skipped
+  if (!permissionComplete) {
+    return (
+      <div className="bg-background min-h-screen">
+        <GyroscopePermission onPermissionGranted={handlePermissionGranted} />
+      </div>
+    );
+  }
+
+  // After permission is handled, render the full app
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {/* Gyroscope permission prompt for iOS devices */}
-        <GyroscopePermission onPermissionGranted={() => setGyroEnabled(true)} />
-
         {/* Lightweight animated background - always visible behind everything */}
         <BackgroundCanvas gyroEnabled={gyroEnabled} />
         <LoadingScreen />

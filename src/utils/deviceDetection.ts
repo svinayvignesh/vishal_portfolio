@@ -17,43 +17,49 @@ export interface QualitySettings {
 }
 
 /**
- * Detects device performance level based on GPU, device type, and memory
+ * Detects device performance level based on GPU capability (unified for all devices)
  */
 export const detectDevicePerformance = (): PerformanceLevel => {
-  // Check for mobile devices
   const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
-
-  // Check device memory (if available)
   const deviceMemory = (navigator as any).deviceMemory;
   const hasLowMemory = deviceMemory && deviceMemory < 4;
 
-  // Try to detect GPU
   try {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-
     if (!gl) return 'low';
 
     const debugInfo = (gl as any).getExtension('WEBGL_debug_renderer_info');
     const renderer = debugInfo ? (gl as any).getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : '';
 
-    // Check for integrated/low-end GPUs - expanded patterns for older hardware
-    const isIntegratedGPU = /Intel|AMD.*Radeon.*Vega|Mali|Adreno [1-5]|PowerVR/i.test(renderer);
-    const isLowEndGPU = /Intel.*HD.*Graphics.*[2-5]|Intel.*UHD.*[1-6]|AMD.*R[2-5]|GeForce.*GT.*[1-9][0-9]{2}|Radeon.*HD/i.test(renderer);
+    // === HIGH-END GPUs ===
+    // Desktop: RTX 30/40 series, RX 6000/7000, Arc
+    // Mobile: iPhone 12+, flagship Android 2020+
+    const isHighEnd = /RTX [34]0|RX [67][0-9]{3}|Arc A[57]|Radeon Pro|Apple GPU|Apple A1[4-9]|Apple M[1-9]|Adreno \(TM\) [67]|Mali-G7[7-9]|Mali-G[89]/i.test(renderer);
 
-    // Mobile devices always get low settings
-    if (isMobile || hasLowMemory) return 'low';
+    // === MID-RANGE GPUs ===
+    // Desktop: GTX 10/16 series, RTX 20, RX 5000, older Radeon
+    // Mobile: iPhone 8-11, mid-tier Android
+    const isMidRange = /GTX 1[0-9]{3}|RTX 20|RX 5[0-9]{3}|Radeon [RV]|GeForce [789][0-9]{2}|Apple A1[0-3]|Adreno \(TM\) [45]|Mali-G7[1-6]|Mali-G5/i.test(renderer);
 
-    // Low-end discrete GPUs also get low settings
-    if (isLowEndGPU) return 'low';
+    // === LOW-END GPUs ===
+    // Desktop: Intel HD/UHD, old GeForce GT, integrated AMD
+    // Mobile: iPhone 7-, budget Android
+    const isLowEnd = /Intel.*HD|Intel.*UHD|Intel.*Iris|GeForce GT|Mali-[TG][0-4]|Adreno [1-3]|PowerVR|AMD.*Radeon.*Vega|Radeon HD/i.test(renderer);
 
-    // Integrated GPUs get medium settings
-    if (isIntegratedGPU) return 'medium';
+    // Memory check - low memory forces down one tier
+    if (hasLowMemory) {
+      if (isHighEnd) return 'medium';
+      return 'low';
+    }
 
-    // Discrete GPUs get high settings
-    return 'high';
+    if (isHighEnd) return 'high';
+    if (isMidRange) return 'medium';
+    if (isLowEnd) return 'low';
+
+    // Unknown GPU - use medium as safe default for mobile, high for desktop
+    return isMobile ? 'medium' : 'high';
   } catch (e) {
-    // Fallback to low if detection fails
     console.warn('GPU detection failed, defaulting to low performance mode');
     return 'low';
   }

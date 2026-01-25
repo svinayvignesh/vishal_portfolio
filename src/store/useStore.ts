@@ -20,7 +20,7 @@ interface ScrollState {
   qualitySettings: QualitySettings;
 
   // Actions
-  setCurrentSection: (section: number) => void;
+  setCurrentSection: (section: number, isMobile?: boolean) => void;
   setSectionProgress: (progress: number) => void;
   setTotalProgress: (progress: number) => void;
   setIsScrolling: (isScrolling: boolean) => void;
@@ -41,16 +41,28 @@ export const useStore = create<ScrollState>((set) => {
     performanceLevel,
     qualitySettings,
 
-  setCurrentSection: (section) => {
-    // If we are in the Hero section (section 0) or Contact section (last section),
-    // show only the hero scene
-    const totalSections = portfolioData.roles.length + 2; // roles + hero + contact
+  setCurrentSection: (section, isMobile = false) => {
+    const rolesCount = portfolioData.roles.length;
+
+    // On mobile: Hero + (Experience + Model) * roles + Contact
+    // On desktop: Hero + Experience * roles + Contact
+    const totalSections = isMobile
+      ? rolesCount * 2 + 2  // 14 sections (hero + 6 exp + 6 model peeks + contact)
+      : rolesCount + 2;     // 8 sections (hero + 6 exp + contact)
+
+    // Hero section (0) or Contact section (last) show hero scene
     if (section === 0 || section >= totalSections - 1) {
       set({ currentSection: section, activeSceneId: 'hero' });
       return;
     }
 
-    const roleIndex = section - 1; // Account for hero section
+    // On mobile, each role has 2 sections (experience + model peek)
+    // So roleIndex = floor((section - 1) / 2)
+    // On desktop, each role has 1 section, so roleIndex = section - 1
+    const roleIndex = isMobile
+      ? Math.floor((section - 1) / 2)
+      : section - 1;
+
     const sceneId = portfolioData.roles[roleIndex]?.sceneId || 'hero';
     set({ currentSection: section, activeSceneId: sceneId });
   },

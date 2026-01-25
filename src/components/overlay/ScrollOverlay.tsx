@@ -29,10 +29,10 @@ const ScrollOverlay: React.FC = () => {
         start: 'top center',
         end: 'bottom center',
         onEnter: () => {
-          setCurrentSection(index);
+          setCurrentSection(index, isMobile);
         },
         onEnterBack: () => {
-          setCurrentSection(index);
+          setCurrentSection(index, isMobile);
         },
         onUpdate: (self) => {
           setSectionProgress(self.progress);
@@ -54,7 +54,7 @@ const ScrollOverlay: React.FC = () => {
     return () => {
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     };
-  }, [setCurrentSection, setSectionProgress, setTotalProgress]);
+  }, [setCurrentSection, setSectionProgress, setTotalProgress, isMobile]);
 
   return (
     <div ref={containerRef} className="relative z-10">

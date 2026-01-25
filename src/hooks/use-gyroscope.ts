@@ -28,10 +28,10 @@ export const useGyroscope = (enabled: boolean = true) => {
       const gamma = event.gamma || 0;
 
       // Normalize to 0-1 range for BackgroundCanvas (0.5 is center)
-      // Clamp to reasonable tilt range (-45 to 45 degrees)
+      // EXTRA SENSITIVE: ~15 degrees of tilt reaches full range
       gyroRef.current = {
-        x: 0.5 + Math.max(-0.5, Math.min(0.5, gamma / 90)), // 0-1 range
-        y: 0.5 + Math.max(-0.5, Math.min(0.5, beta / 180)), // 0-1 range
+        x: 0.5 + Math.max(-0.5, Math.min(0.5, gamma / 30)), // 0-1 range
+        y: 0.5 + Math.max(-0.5, Math.min(0.5, beta / 30)),  // 0-1 range
       };
     };
 
@@ -71,9 +71,10 @@ export const useGyroscopeNormalized = (enabled: boolean = true) => {
       const gamma = event.gamma || 0;
 
       // Normalize to -1 to 1 range for 3D rotation
+      // EXTRA SENSITIVE: ~15 degrees of tilt reaches full range
       gyroRef.current = {
-        x: Math.max(-1, Math.min(1, gamma / 45)), // -1 to 1 range
-        y: Math.max(-1, Math.min(1, beta / 45)), // -1 to 1 range
+        x: Math.max(-1, Math.min(1, gamma / 15)), // -1 to 1 range
+        y: Math.max(-1, Math.min(1, beta / 15)),  // -1 to 1 range
       };
     };
 

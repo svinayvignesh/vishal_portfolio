@@ -72,9 +72,9 @@ const SceneTransition: React.FC<{
         let targetRotY, targetRotX;
 
         if (isMobile) {
-          // Use gyroscope data on mobile
-          targetRotY = gyroRef.current.x * 0.1; // 0.1 rad is subtle
-          targetRotX = -gyroRef.current.y * 0.1;
+          // Use gyroscope data on mobile - EXTRA SENSITIVE
+          targetRotY = gyroRef.current.x * 0.25;
+          targetRotX = -gyroRef.current.y * 0.25;
         } else {
           // Use mouse pointer on desktop
           targetRotY = state.pointer.x * 0.1;

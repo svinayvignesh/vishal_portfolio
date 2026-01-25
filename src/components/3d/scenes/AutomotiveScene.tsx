@@ -145,7 +145,7 @@ const AutomotiveScene: React.FC = () => {
       <mesh geometry={nodes.Object_14.geometry} material={materials.PaletteMaterial002} rotation={[Math.PI / 2, 0, 0.007]} />
       <mesh geometry={nodes.Object_26.geometry} material={materials['stitch.001']} rotation={[Math.PI / 2, 0, 0.007]} />
       <mesh geometry={nodes.Object_28.geometry} material={materials.PaletteMaterial003} rotation={[Math.PI / 2, 0, 0.007]} />
-      <mesh geometry={nodes.Object_39.geometry} material={materials['vehicle_generic_tyrewallblack.001']} rotation={[Math.PI / 2, 0, 0.005]} position={[0.0219399600554577, -0.493165768751545, -0.75]} />
+      <mesh geometry={nodes.Object_39.geometry} material={materials['vehicle_generic_tyrewallblack.001']} rotation={[1.6109140099536625, 0.0007077694913524425, -3.131100906233251]} position={[1.84835177573354, -0.520775418722115, -0.71]} />
 
       {/* Front-right accent light for car detail - slides across as you scroll */}
       <pointLight ref={lightRef} position={[1.76705953376299, -0.0907553081636627, -1.77]} intensity={0} color={"#1351d8"} />

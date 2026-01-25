@@ -473,11 +473,9 @@ const BackgroundCanvas: React.FC<BackgroundCanvasProps> = ({ gyroEnabled = false
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, width, height);
 
-        // Parallax offset - use gyroscope on mobile, mouse on desktop
-        const inputX = isMobile ? gyroRef.current.x : mouseRef.current.x;
-        const inputY = isMobile ? gyroRef.current.y : mouseRef.current.y;
-        const mouseOffsetX = (inputX - 0.5) * 30;
-        const mouseOffsetY = (inputY - 0.5) * 20;
+        // Parallax offset - only use mouse on desktop, disabled on mobile (scroll only)
+        const mouseOffsetX = isMobile ? 0 : (mouseRef.current.x - 0.5) * 30;
+        const mouseOffsetY = isMobile ? 0 : (mouseRef.current.y - 0.5) * 20;
 
         // Scroll parallax offset
         const scrollOffset = scrollRef.current * 0.1;

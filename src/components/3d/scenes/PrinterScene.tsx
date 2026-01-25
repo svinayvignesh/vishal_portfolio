@@ -1,10 +1,10 @@
-import React, { useRef, useEffect, useMemo } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useStore } from '@/store/useStore';
 import { useMouse } from '@/hooks/use-mouse';
-import { optimizeModel, convertToLitMaterials } from '@/utils/modelOptimizer';
+import { optimizeModel } from '@/utils/modelOptimizer';
 // @ts-ignore
 import modelUrl from '/models/resin_3d_printer/resin_3d_printer-transformed.glb?url';
 
@@ -22,8 +22,6 @@ const PrinterScene: React.FC = () => {
   // Load optimized model
   const { scene, nodes, materials } = useGLTF(modelUrl) as any;
 
-  // Convert materials to lit versions (MeshBasicMaterial -> MeshLambertMaterial)
-  const litMaterials = useMemo(() => convertToLitMaterials(materials), [materials]);
 
   // Get quality settings from store
   const qualitySettings = useStore((state) => state.qualitySettings);
@@ -199,10 +197,13 @@ const PrinterScene: React.FC = () => {
 
   return (
     <group ref={groupRef} dispose={null} scale={12} position={[0, -1.5, 0]}>
+      {/* Local ambient light for this model */}
+      <ambientLight intensity={2} />
+
       <mesh
         ref={mesh1Ref}
         geometry={nodes.mgn12h_Material001_0.geometry}
-        material={litMaterials.PaletteMaterial001}
+        material={materials.PaletteMaterial001}
         position={[0, 0.228, 0.007]}
         rotation={[-Math.PI / 2, Math.PI / 2, 0]}
         scale={1.25}
@@ -211,14 +212,10 @@ const PrinterScene: React.FC = () => {
       <mesh
         ref={mesh3Ref}
         geometry={nodes.capac_Material029_0.geometry}
-        material={litMaterials.PaletteMaterial002}
+        material={materials.PaletteMaterial002}
         position={[0, 0.187, 0.095]}
         rotation={[-Math.PI / 2, 0, 0]}
       />
-
-
-      {/* Single accent light for performance - removed 2 static point lights */}
-
     </group>
   );
 };

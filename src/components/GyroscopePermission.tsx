@@ -40,17 +40,31 @@ const GyroscopePermission: React.FC<GyroscopePermissionProps> = ({ onPermissionG
     return null;
   }
 
+  // Handle button click - iOS requires direct user gesture for permission
+  const handleEnableClick = () => {
+    requestPermission();
+  };
+
+  const handleSkipClick = () => {
+    setNeedsPermission(false);
+  };
+
   return (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm"
       style={{
-        touchAction: 'none',
-        WebkitTapHighlightColor: 'transparent'
+        // Use auto to allow touch events to pass through to children
+        touchAction: 'auto',
+        WebkitTapHighlightColor: 'transparent',
+        // Ensure this captures pointer events
+        pointerEvents: 'auto'
       }}
+      // Prevent clicks on backdrop from doing anything unexpected
+      onClick={(e) => e.stopPropagation()}
     >
       <div
         className="card-steel p-8 max-w-md mx-4"
-        style={{ touchAction: 'manipulation' }}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
@@ -64,32 +78,16 @@ const GyroscopePermission: React.FC<GyroscopePermissionProps> = ({ onPermissionG
             Tap below to enable motion controls for the best experience.
           </p>
           <button
-            onClick={requestPermission}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              requestPermission();
-            }}
+            type="button"
+            onClick={handleEnableClick}
             className="px-6 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 transition-colors font-medium cursor-pointer select-none"
-            style={{
-              touchAction: 'manipulation',
-              WebkitUserSelect: 'none',
-              userSelect: 'none'
-            }}
           >
             Enable Gyroscope
           </button>
           <button
-            onClick={() => setNeedsPermission(false)}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              setNeedsPermission(false);
-            }}
+            type="button"
+            onClick={handleSkipClick}
             className="text-muted-foreground text-sm hover:text-foreground active:text-foreground transition-colors cursor-pointer select-none"
-            style={{
-              touchAction: 'manipulation',
-              WebkitUserSelect: 'none',
-              userSelect: 'none'
-            }}
           >
             Skip for now
           </button>

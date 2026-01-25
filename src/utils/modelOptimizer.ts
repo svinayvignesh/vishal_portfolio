@@ -178,9 +178,6 @@ export function convertToLitMaterials(
   const converted: Record<string, THREE.Material> = {};
 
   for (const [name, mat] of Object.entries(materials)) {
-    // Log for debugging
-    console.log(`[convertToLitMaterials] ${name}: ${mat.type}`);
-
     // Extract common properties safely
     const anyMat = mat as any;
 
@@ -200,7 +197,6 @@ export function convertToLitMaterials(
     }
 
     converted[name] = new THREE.MeshLambertMaterial(lambertParams);
-    console.log(`  -> Converted to MeshLambertMaterial`);
   }
 
   return converted;

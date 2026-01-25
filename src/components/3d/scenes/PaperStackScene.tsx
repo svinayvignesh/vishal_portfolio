@@ -183,7 +183,7 @@ const PaperStackScene: React.FC = () => {
       </group>
 
       {/* Ambient lighting */}
-      <pointLight position={[2, 2, 2]} intensity={300} color={"#df9649"} />
+
     </group>
   );
 };

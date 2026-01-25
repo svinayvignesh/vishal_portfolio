@@ -1,10 +1,10 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useMouse } from '@/hooks/use-mouse';
 import { useStore } from '@/store/useStore';
-import { optimizeModel } from '@/utils/modelOptimizer';
+import { optimizeModel, convertToLitMaterials } from '@/utils/modelOptimizer';
 // @ts-ignore
 import modelUrl from '/models/ford/ford_f150_raptor-transformed.glb?url';
 
@@ -15,6 +15,9 @@ const AutomotiveScene: React.FC = () => {
 
   // Load the model
   const { scene, nodes, materials } = useGLTF(modelUrl) as any;
+
+  // Convert materials to lit versions (MeshBasicMaterial -> MeshLambertMaterial)
+  const litMaterials = useMemo(() => convertToLitMaterials(materials), [materials]);
 
   // Get quality settings from store
   const qualitySettings = useStore((state) => state.qualitySettings);
@@ -119,18 +122,16 @@ const AutomotiveScene: React.FC = () => {
   return (
     <group dispose={null} position={[-1.62, -1.5, -1.09]} scale={2}>
       <group ref={groupRef} rotation={[-2.9722319608769, -0.4687061236053624, -3.1081290466466123]}>
-        <mesh geometry={nodes.Object_8.geometry} material={materials.PaletteMaterial001} position={[-0.914, 1.06, -1.094]} rotation={[Math.PI / 2, 0, 0.007]} />
+        <mesh geometry={nodes.Object_8.geometry} material={litMaterials.PaletteMaterial001} position={[-0.914, 1.06, -1.094]} rotation={[Math.PI / 2, 0, 0.007]} />
 
-        <mesh geometry={nodes.Object_14.geometry} material={materials.PaletteMaterial002} position={[-0.914, 1.06, -1.094]} rotation={[Math.PI / 2, 0, 0.007]} />
-
-
+        <mesh geometry={nodes.Object_14.geometry} material={litMaterials.PaletteMaterial002} position={[-0.914, 1.06, -1.094]} rotation={[Math.PI / 2, 0, 0.007]} />
 
 
 
-        <mesh geometry={nodes.Object_26.geometry} material={materials['stitch.001']} position={[-0.914, 1.06, -1.094]} rotation={[Math.PI / 2, 0, 0.007]} />
-        <mesh geometry={nodes.Object_28.geometry} material={materials.PaletteMaterial003} position={[-0.914, 1.06, -1.094]} rotation={[Math.PI / 2, 0, 0.007]} />
 
 
+        <mesh geometry={nodes.Object_26.geometry} material={litMaterials['stitch.001']} position={[-0.914, 1.06, -1.094]} rotation={[Math.PI / 2, 0, 0.007]} />
+        <mesh geometry={nodes.Object_28.geometry} material={litMaterials.PaletteMaterial003} position={[-0.914, 1.06, -1.094]} rotation={[Math.PI / 2, 0, 0.007]} />
 
 
 
@@ -148,8 +149,10 @@ const AutomotiveScene: React.FC = () => {
 
 
 
-        <mesh geometry={nodes.Object_39.geometry} material={materials['vehicle_generic_tyrewallblack.001']} position={[-0.919, 0.476, 1.924]} rotation={[Math.PI / 2, 0, 0.005]} />
-        <mesh geometry={nodes.Object_42.geometry} material={materials['vehicle_generic_tyrewallblack.002']} position={[-0.901, 0.476, -1.827]} rotation={[-1.871, -0.136, 0.416]} />
+
+
+        <mesh geometry={nodes.Object_39.geometry} material={litMaterials['vehicle_generic_tyrewallblack.001']} position={[-0.919, 0.476, 1.924]} rotation={[Math.PI / 2, 0, 0.005]} />
+        <mesh geometry={nodes.Object_42.geometry} material={litMaterials['vehicle_generic_tyrewallblack.002']} position={[-0.901, 0.476, -1.827]} rotation={[-1.871, -0.136, 0.416]} />
 
 
         {/* Front-right accent light for car detail - slides across as you scroll */}

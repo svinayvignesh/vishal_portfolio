@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 
 /**
  * Material cache to share materials across meshes and reduce draw calls
@@ -92,30 +91,49 @@ export function optimizeModel(
         }
       }
 
-      // Simplify shaders for low-end devices
-      if (simplifyShaders && child.material) {
+      // Material processing for lighting compatibility and performance
+      if (child.material) {
         const materials = Array.isArray(child.material)
           ? child.material
           : [child.material];
 
         materials.forEach((mat, index) => {
-          if (mat instanceof THREE.MeshStandardMaterial) {
-            // Replace with MeshBasicMaterial for low-end devices
-            const basicMat = new THREE.MeshBasicMaterial({
+          let newMat: THREE.Material | null = null;
+
+          // ALWAYS convert MeshBasicMaterial to MeshLambertMaterial
+          // MeshBasicMaterial is completely unlit (ignores all lights)
+          // This handles GLTFs exported with baked/flat materials (e.g., PaletteMaterial)
+          if (mat instanceof THREE.MeshBasicMaterial) {
+            newMat = new THREE.MeshLambertMaterial({
               color: mat.color,
               map: mat.map,
               transparent: mat.transparent,
               opacity: mat.opacity,
               side: mat.side,
             });
+          }
+          // For low-end devices, simplify MeshStandardMaterial to MeshLambertMaterial
+          // Lambert = diffuse only (no specular), cheaper but still responds to lights
+          else if (simplifyShaders && mat instanceof THREE.MeshStandardMaterial) {
+            newMat = new THREE.MeshLambertMaterial({
+              color: mat.color,
+              map: mat.map,
+              transparent: mat.transparent,
+              opacity: mat.opacity,
+              side: mat.side,
+              emissive: mat.emissive,
+              emissiveMap: mat.emissiveMap,
+              emissiveIntensity: mat.emissiveIntensity,
+            });
+          }
 
+          // Apply new material if created
+          if (newMat) {
             if (Array.isArray(child.material)) {
-              child.material[index] = basicMat;
+              child.material[index] = newMat;
             } else {
-              child.material = basicMat;
+              child.material = newMat;
             }
-
-            // Dispose old material
             mat.dispose();
           }
         });
@@ -126,22 +144,66 @@ export function optimizeModel(
 
 /**
  * Create a simplified version of a material for performance
+ * Uses MeshLambertMaterial (diffuse only, no specular) which is cheaper
+ * than MeshStandardMaterial but still responds to lights
  */
 export function createSimplifiedMaterial(
   original: THREE.Material
 ): THREE.Material {
   if (original instanceof THREE.MeshStandardMaterial) {
-    return new THREE.MeshBasicMaterial({
+    return new THREE.MeshLambertMaterial({
       color: original.color,
       map: original.map,
       transparent: original.transparent,
       opacity: original.opacity,
       side: original.side,
+      emissive: original.emissive,
+      emissiveMap: original.emissiveMap,
+      emissiveIntensity: original.emissiveIntensity,
     });
   }
 
   // Return clone for other material types
   return original.clone();
+}
+
+/**
+ * Convert a GLTF materials object to use lit materials
+ * Call this on useGLTF().materials to ensure all materials respond to lights
+ * Forces ALL materials to MeshLambertMaterial for consistent lighting response
+ */
+export function convertToLitMaterials(
+  materials: Record<string, THREE.Material>
+): Record<string, THREE.Material> {
+  const converted: Record<string, THREE.Material> = {};
+
+  for (const [name, mat] of Object.entries(materials)) {
+    // Log for debugging
+    console.log(`[convertToLitMaterials] ${name}: ${mat.type}`);
+
+    // Extract common properties safely
+    const anyMat = mat as any;
+
+    const lambertParams: THREE.MeshLambertMaterialParameters = {
+      color: anyMat.color || new THREE.Color(0xffffff),
+      map: anyMat.map || null,
+      transparent: anyMat.transparent || false,
+      opacity: anyMat.opacity !== undefined ? anyMat.opacity : 1,
+      side: anyMat.side || THREE.FrontSide,
+    };
+
+    // For MeshStandardMaterial, also copy emissive properties
+    if (mat instanceof THREE.MeshStandardMaterial) {
+      lambertParams.emissive = mat.emissive;
+      lambertParams.emissiveMap = mat.emissiveMap;
+      lambertParams.emissiveIntensity = mat.emissiveIntensity;
+    }
+
+    converted[name] = new THREE.MeshLambertMaterial(lambertParams);
+    console.log(`  -> Converted to MeshLambertMaterial`);
+  }
+
+  return converted;
 }
 
 /**

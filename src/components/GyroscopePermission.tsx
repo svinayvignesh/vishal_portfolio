@@ -41,8 +41,17 @@ const GyroscopePermission: React.FC<GyroscopePermissionProps> = ({ onPermissionG
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-      <div className="card-steel p-8 max-w-md mx-4">
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm"
+      style={{
+        touchAction: 'none',
+        WebkitTapHighlightColor: 'transparent'
+      }}
+    >
+      <div
+        className="card-steel p-8 max-w-md mx-4"
+        style={{ touchAction: 'manipulation' }}
+      >
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
             <Smartphone className="w-8 h-8 text-primary" />
@@ -56,13 +65,31 @@ const GyroscopePermission: React.FC<GyroscopePermissionProps> = ({ onPermissionG
           </p>
           <button
             onClick={requestPermission}
-            className="px-6 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium"
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              requestPermission();
+            }}
+            className="px-6 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 transition-colors font-medium cursor-pointer select-none"
+            style={{
+              touchAction: 'manipulation',
+              WebkitUserSelect: 'none',
+              userSelect: 'none'
+            }}
           >
             Enable Gyroscope
           </button>
           <button
             onClick={() => setNeedsPermission(false)}
-            className="text-muted-foreground text-sm hover:text-foreground transition-colors"
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              setNeedsPermission(false);
+            }}
+            className="text-muted-foreground text-sm hover:text-foreground active:text-foreground transition-colors cursor-pointer select-none"
+            style={{
+              touchAction: 'manipulation',
+              WebkitUserSelect: 'none',
+              userSelect: 'none'
+            }}
           >
             Skip for now
           </button>

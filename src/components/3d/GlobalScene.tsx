@@ -1,6 +1,6 @@
 import React, { Suspense, useRef, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Preload, Environment } from '@react-three/drei';
+import { Preload } from '@react-three/drei';
 import * as THREE from 'three';
 import StageManager from './StageManager';
 
@@ -53,7 +53,14 @@ const GlobalScene: React.FC<GlobalSceneProps> = ({ gyroEnabled = false }) => {
       }}
     >
       <Canvas
-        camera={{ position: [0, 0, isMobile ? 14 : 10], fov: 50 }}
+        camera={{
+          position: [0, 0, isMobile ? 14 : 10],
+          fov: 50,
+          // Tight frustum - models are within ~20 units, no need for default far=2000
+          // This improves depth buffer precision and reduces rendering volume
+          near: 0.5,
+          far: 40
+        }}
         dpr={quality.dpr}
         gl={{
           antialias: quality.antialias,
@@ -97,30 +104,27 @@ const GlobalScene: React.FC<GlobalSceneProps> = ({ gyroEnabled = false }) => {
           {/* Frame rate limiter for low-end devices */}
           {quality.targetFPS < 60 && <FrameRateLimiter />}
 
-          {/* Ambient Light - Adjusted for performance */}
-          <ambientLight intensity={isDark ? 0.4 : 1.2} />
-
-          {/* Main Key Light - Shadows disabled for performance */}
-          <directionalLight
-            position={[10, 10, 5]}
-            intensity={isDark ? 2.0 : 1.2}
-            color={isDark ? "#88b4d4" : "#ffffff"}
-            castShadow={false}
+          {/*
+            Global Lighting - Minimal computational approach
+            Using hemisphereLight which is extremely cheap (no shadows, no calculations)
+            It provides subtle sky/ground color differentiation without expensive computations
+            Individual model lights can be added manually per-scene as needed
+          */}
+          <hemisphereLight
+            args={[
+              isDark ? "#8899bb" : "#ffffff",  // Sky color (from above)
+              isDark ? "#445566" : "#d4c4a8",  // Ground color (from below)
+              isDark ? 10 : 7               // Intensity - enough to see original colors
+            ]}
           />
 
-          {/* Rim/Accent Light - Reduced from 2 point lights to 1 */}
-          {quality.maxLights >= 2 && (
-            <pointLight
-              position={[-5, 5, 5]}
-              intensity={isDark ? 2.0 : 0.4}
-              color={isDark ? "#d4a574" : "#ffaa66"}
-            />
-          )}
+          {/* Removed expensive lighting:
+              - directionalLight: Requires per-vertex calculations
+              - pointLight: Requires distance attenuation calculations
+              - Environment map: Most expensive - loads HDR textures and does IBL
 
-          {/* Environment map with adaptive intensity based on device performance */}
-          {quality.envIntensity > 0 && (
-            <Environment preset={isDark ? "city" : "studio"} environmentIntensity={quality.envIntensity} />
-          )}
+              For model-specific lighting, add lights directly in scene components
+          */}
 
           {/* Scene manager handles all 3D scene transitions */}
           <StageManager gyroEnabled={gyroEnabled} />

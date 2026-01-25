@@ -17,6 +17,7 @@ const TurbineScene: React.FC = () => {
   const { scene, nodes, materials, animations } = useGLTF(modelUrl) as any;
   const { actions, names } = useAnimations(animations, groupRef);
 
+
   // Get quality settings from store
   const qualitySettings = useStore((state) => state.qualitySettings);
 
@@ -115,6 +116,9 @@ const TurbineScene: React.FC = () => {
 
   return (
     <group ref={groupRef} dispose={null} rotation={[0.5, -1.3, 0.15]} scale={2}>
+      {/* Local ambient light for this model */}
+      <ambientLight intensity={2} />
+
       <group name="Sketchfab_Scene">
         <group name="turbine_01_obj">
           <group name="hull_turbine" position={[2.048, 0, 0]}>
@@ -126,7 +130,7 @@ const TurbineScene: React.FC = () => {
         </group>
         <mesh name="hull_turbine_004_Stainlesssteel-Black-PBR_0" geometry={nodes['hull_turbine_004_Stainlesssteel-Black-PBR_0'].geometry} material={materials.PaletteMaterial001} />
       </group>
-      <pointLight ref={lightRef} intensity={0} color={"#b08307"} position={[5, -1, 6]} />
+
     </group>
   );
 };

@@ -1,38 +1,97 @@
-# Vishal Shasi - Process Engineer Portfolio
+# Vishal Shasi - Interactive 3D Portfolio
 
-Process Engineer with 5+ years of experience in manufacturing operations, continuous improvement, and lean methodologies. Expertise in CQV, CAPA, RCA, and shop-floor coaching.
+An interactive portfolio website featuring immersive 3D backgrounds that respond to scroll position and device orientation. Built with React Three Fiber for WebGL rendering, the site showcases 8+ years of process engineering experience across aerospace, automotive, and manufacturing industries.
 
-## Project Info
+## Features
 
-- **Author**: Vishal Shasi
-- **Role**: Process Engineer & Manufacturing
+- **Interactive 3D Scenes**: Six unique 3D environments (CNC machine, 3D printer, gas turbine, automotive, and more) that transition as you navigate through career experiences
+- **Gyroscope Support**: On mobile devices, 3D scenes respond to device tilt for an immersive experience
+- **Scroll-Based Navigation**: Smooth section transitions with progress indicators
+- **Performance Optimized**: Tiered rendering for different device capabilities with instanced meshes and optimized geometry
+- **Responsive Design**: Adapts seamlessly across desktop, tablet, and mobile devices
+
+## Sections
+
+- **Hero**: Introduction with animated tagline
+- **About**: Professional summary and career highlights
+- **Experience**: Interactive career timeline with role-specific 3D backgrounds
+- **Education**: Academic credentials with institution logos
+- **Expertise**: Skills organized by category (Process & Manufacturing, Lean/CI, Design & Analytics)
+- **Projects**: Featured work with metrics and technologies
+- **Contact**: Professional contact information and resume download
 
 ## Technology Stack
 
-This portfolio is built with modern web technologies:
-
-- **Framework**: [React](https://react.dev/) + [Vite](https://vitejs.dev/)
+- **Framework**: [React 18](https://react.dev/) + [Vite](https://vitejs.dev/)
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **3D Graphics**: [Three.js](https://threejs.org/) via [React Three Fiber](https://docs.pmnd.rs/react-three-fiber) + [Drei](https://github.com/pmndrs/drei)
+- **Animation**: [Framer Motion](https://www.framer.com/motion/) + [GSAP](https://greensock.com/gsap/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **UI Components**: [shadcn/ui](https://ui.shadcn.com/)
+- **UI Components**: [shadcn/ui](https://ui.shadcn.com/) + [Radix UI](https://www.radix-ui.com/)
+- **State Management**: [Zustand](https://zustand-demo.pmnd.rs/)
+- **Data Fetching**: [TanStack Query](https://tanstack.com/query)
 - **Icons**: [Lucide React](https://lucide.dev/)
 
 ## Getting Started
 
-To run this project locally:
+### Prerequisites
 
-1.  **Clone the repository**
-    ```bash
-    git clone <repository-url>
-    ```
-2.  **Install dependencies**
-    ```bash
-    npm install
-    ```
-3.  **Start the development server**
-    ```bash
-    npm run dev
-    ```
+- Node.js 18+ or Bun
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd vishal_portfolio
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   bun install
+   ```
+
+3. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Build for production**
+   ```bash
+   npm run build
+   ```
+
+### Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run preview` | Preview production build |
+| `npm run lint` | Run ESLint |
+| `npm run test` | Run tests |
+
+## Project Structure
+
+```
+src/
+├── components/
+│   ├── 3d/              # Three.js scenes and 3D components
+│   │   └── scenes/      # Individual 3D scene definitions
+│   ├── overlay/         # UI overlay components
+│   │   └── sections/    # Page sections (Hero, About, etc.)
+│   └── ui/              # Reusable UI components (shadcn)
+├── data/                # Portfolio content data
+├── hooks/               # Custom React hooks
+├── store/               # Zustand state management
+└── utils/               # Utility functions
+public/
+├── models/              # 3D model files (GLB/GLTF)
+├── logos/               # Company and institution logos
+└── certificates/        # Certificate images
+```
 
 ## License
 

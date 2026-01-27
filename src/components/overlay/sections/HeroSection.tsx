@@ -13,21 +13,17 @@ const HeroSection: React.FC = () => {
   const { personal, certifications } = portfolioData;
   const [selectedCert, setSelectedCert] = useState<Certification | null>(null);
 
-  const scrollToContent = () => {
-    window.scrollTo({
-      top: window.innerHeight,
-      behavior: 'smooth',
-    });
+  const scrollToExperience = () => {
+    // Scroll to Experience section (index 4)
+    // Sections: Hero(0), About(1), Expertise(2), Projects(3), Experience(4), Education(5), Contact(6)
+    const experienceSection = document.querySelectorAll('.scroll-section')[4];
+    experienceSection?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const scrollToContact = () => {
-    // Scroll to the last section (Contact section)
-    // Total sections = 1 hero + 6 roles + 1 contact = 8
-    // So contact section is at index 7, which means scroll to 7 * window.innerHeight
-    window.scrollTo({
-      top: window.innerHeight * (portfolioData.roles.length + 1),
-      behavior: 'smooth',
-    });
+    // Scroll to Contact section (index 6)
+    const contactSection = document.querySelectorAll('.scroll-section')[6];
+    contactSection?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -48,13 +44,13 @@ const HeroSection: React.FC = () => {
             <h1 className="heading-technical text-5xl md:text-7xl text-foreground mb-4 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
               {personal.name}
             </h1>
-            <p className="text-xl md:text-2xl text-primary font-mono drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)] bg-background/40 backdrop-blur-sm px-4 py-2 rounded-lg inline-block">
+            <p className="text-xl md:text-2xl text-primary font-mono drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)] bg-background/25 backdrop-blur-sm px-4 py-2 rounded-lg inline-block">
               {personal.title}
             </p>
           </div>
 
           {/* Tagline */}
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mb-8 leading-relaxed drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)] bg-background/30 backdrop-blur-sm px-4 py-3 rounded-lg">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mb-8 leading-relaxed drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)] bg-background/20 backdrop-blur-sm px-4 py-3 rounded-lg">
             {personal.tagline}
           </p>
 
@@ -127,7 +123,7 @@ const HeroSection: React.FC = () => {
           {/* CTA Buttons */}
           <div className="flex gap-4">
             <button
-              onClick={scrollToContent}
+              onClick={scrollToExperience}
               className="btn-copper flex items-center gap-2"
             >
               View Experience

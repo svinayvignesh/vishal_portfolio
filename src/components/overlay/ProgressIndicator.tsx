@@ -1,16 +1,17 @@
 import React from 'react';
 import { useStore } from '@/store/useStore';
-import { portfolioData } from '@/data/portfolioData';
 
 const ProgressIndicator: React.FC = () => {
-  const { currentSection, totalSections, totalProgress } = useStore();
+  const { currentSection, totalProgress } = useStore();
 
+  // New section structure
   const sections = [
     { id: 'hero', label: 'Home' },
-    ...portfolioData.roles.map((role, i) => ({
-      id: role.id,
-      label: `0${i + 1}`,
-    })),
+    { id: 'about', label: 'About' },
+    { id: 'expertise', label: 'Skills' },
+    { id: 'projects', label: 'Projects' },
+    { id: 'experience', label: 'Experience' },
+    { id: 'education', label: 'Education' },
     { id: 'contact', label: 'Contact' },
   ];
 

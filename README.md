@@ -1,6 +1,6 @@
 # Vishal Shasi - Interactive 3D Portfolio
 
-An interactive portfolio website featuring immersive 3D backgrounds that respond to scroll position and device orientation. Built with React Three Fiber for WebGL rendering, the site showcases 8+ years of process engineering experience across aerospace, automotive, and manufacturing industries.
+An interactive portfolio website featuring immersive 3D backgrounds that respond to scroll position and device orientation. Built with React Three Fiber for WebGL rendering, the site showcases 8+ years of process engineering experience across manufacturing industries.
 
 ## Features
 

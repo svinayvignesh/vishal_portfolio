@@ -2,6 +2,9 @@ import { create } from 'zustand';
 import { portfolioData } from '@/data/portfolioData';
 import { detectDevicePerformance, getQualitySettings, type PerformanceLevel, type QualitySettings } from '@/utils/deviceDetection';
 
+// New section structure: Hero, About, Expertise, Projects, Experience, Education, Contact
+const TOTAL_SECTIONS = 7;
+
 interface ScrollState {
   // Current section index (0-based)
   currentSection: number;
@@ -37,35 +40,46 @@ export const useStore = create<ScrollState>((set) => {
     totalProgress: 0,
     isScrolling: false,
     activeSceneId: 'hero', // Start with hero scene by default
-    totalSections: portfolioData.roles.length + 2, // roles + hero + contact
+    totalSections: TOTAL_SECTIONS,
     performanceLevel,
     qualitySettings,
 
-  setCurrentSection: (section, isMobile = false) => {
-    const rolesCount = portfolioData.roles.length;
+    setCurrentSection: (section, isMobile = false) => {
+      // Section mapping:
+      // 0 = Hero -> 'hero'
+      // 1 = About -> 'paper-stack' (reuse for documentation theme)
+      // 2 = Expertise -> 'hero' (neutral)
+      // 3 = Projects -> 'hero' (neutral)
+      // 4 = Experience -> scene changes via ExperienceSection component
+      // 5 = Education -> 'hero' (neutral)
+      // 6 = Contact -> 'hero'
 
-    // On mobile: Hero + (Experience + Model) * roles + Contact
-    // On desktop: Hero + Experience * roles + Contact
-    const totalSections = isMobile
-      ? rolesCount * 2 + 2  // 14 sections (hero + 6 exp + 6 model peeks + contact)
-      : rolesCount + 2;     // 8 sections (hero + 6 exp + contact)
+      let sceneId = 'hero';
 
-    // Hero section (0) or Contact section (last) show hero scene
-    if (section === 0 || section >= totalSections - 1) {
-      set({ currentSection: section, activeSceneId: 'hero' });
-      return;
-    }
+      switch (section) {
+        case 0: // Hero
+          sceneId = 'hero';
+          break;
+        case 1: // About
+          sceneId = 'paper-stack';
+          break;
+        case 2: // Expertise
+        case 3: // Projects
+          sceneId = 'hero';
+          break;
+        case 4: // Experience - use first role's scene as default
+          sceneId = portfolioData.roles[0]?.sceneId || 'paper-stack';
+          break;
+        case 5: // Education
+        case 6: // Contact
+          sceneId = 'hero';
+          break;
+        default:
+          sceneId = 'hero';
+      }
 
-    // On mobile, each role has 2 sections (experience + model peek)
-    // So roleIndex = floor((section - 1) / 2)
-    // On desktop, each role has 1 section, so roleIndex = section - 1
-    const roleIndex = isMobile
-      ? Math.floor((section - 1) / 2)
-      : section - 1;
-
-    const sceneId = portfolioData.roles[roleIndex]?.sceneId || 'hero';
-    set({ currentSection: section, activeSceneId: sceneId });
-  },
+      set({ currentSection: section, activeSceneId: sceneId });
+    },
     setSectionProgress: (progress) => set({ sectionProgress: progress }),
     setTotalProgress: (progress) => set({ totalProgress: progress }),
     setIsScrolling: (isScrolling) => set({ isScrolling }),

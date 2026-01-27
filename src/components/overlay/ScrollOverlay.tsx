@@ -1,10 +1,13 @@
-import React, { useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useStore } from '@/store/useStore';
-import { portfolioData } from '@/data/portfolioData';
 import HeroSection from './sections/HeroSection';
-import RoleSection from './sections/RoleSection';
+import AboutSection from './sections/AboutSection';
+import ExpertiseSection from './sections/ExpertiseSection';
+import ProjectsSection from './sections/ProjectsSection';
+import ExperienceSection from './sections/ExperienceSection';
+import EducationSection from './sections/EducationSection';
 import ContactSection from './sections/ContactSection';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -13,7 +16,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const ScrollOverlay: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { setCurrentSection, setSectionProgress, setTotalProgress, totalSections } = useStore();
+  const { setCurrentSection, setSectionProgress, setTotalProgress } = useStore();
   const isMobile = useIsMobile();
 
   useLayoutEffect(() => {
@@ -58,33 +61,37 @@ const ScrollOverlay: React.FC = () => {
 
   return (
     <div ref={containerRef} className="relative z-10">
-      {/* Hero Section */}
+      {/* 1. Hero Section */}
       <section className="scroll-section min-h-screen flex items-center justify-center snap-start snap-always">
         <HeroSection />
       </section>
 
-      {/* Role Sections - On mobile: alternating content and 3D space */}
-      {portfolioData.roles.map((role, index) => (
-        <React.Fragment key={role.id}>
-          {/* Experience Card Section */}
-          <section className="scroll-section min-h-screen flex items-center snap-start snap-always">
-            <RoleSection role={role} index={index} isMobile={isMobile} />
-          </section>
+      {/* 2. About Section */}
+      <section className="scroll-section min-h-screen flex items-center justify-center snap-start snap-always">
+        <AboutSection />
+      </section>
 
-          {/* 3D Model Section - Only on mobile, small peek space for 3D model */}
-          {isMobile && (
-            <section
-              className="scroll-section h-64 flex items-center justify-center snap-start snap-always"
-              data-scene-index={index}
-            >
-              {/* Small section for 3D model to peek through (positioned fixed behind) */}
-              <div className="w-full h-full" />
-            </section>
-          )}
-        </React.Fragment>
-      ))}
+      {/* 3. Expertise Section */}
+      <section className="scroll-section min-h-screen flex items-center justify-center snap-start snap-always">
+        <ExpertiseSection />
+      </section>
 
-      {/* Contact Section */}
+      {/* 4. Projects Section */}
+      <section className="scroll-section min-h-screen flex items-center justify-center snap-start snap-always">
+        <ProjectsSection />
+      </section>
+
+      {/* 5. Experience Section (Tabbed Timeline) */}
+      <section className="scroll-section min-h-screen flex items-center justify-center snap-start snap-always">
+        <ExperienceSection isMobile={isMobile} />
+      </section>
+
+      {/* 6. Education Section */}
+      <section className="scroll-section min-h-screen flex items-center justify-center snap-start snap-always">
+        <EducationSection />
+      </section>
+
+      {/* 7. Contact Section */}
       <section className="scroll-section min-h-screen flex items-center justify-center snap-start snap-always">
         <ContactSection />
       </section>

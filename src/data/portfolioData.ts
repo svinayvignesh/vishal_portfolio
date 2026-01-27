@@ -20,6 +20,23 @@ export interface Certification {
   credentialId?: string;
 }
 
+export interface Project {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  technologies: string[];
+  metrics: string[];
+  roleId: string; // Reference to the role this project came from
+}
+
+export interface AboutData {
+  headline: string;
+  story: string;
+  highlights: string[];
+  values: string[];
+}
+
 export interface PortfolioData {
   personal: {
     name: string;
@@ -31,10 +48,12 @@ export interface PortfolioData {
     summary: string;
     resume: string;
   };
+  about: AboutData;
   expertise: {
     category: string;
     skills: string[];
   }[];
+  projects: Project[];
   certifications: Certification[];
   education: {
     degree: string;
@@ -55,6 +74,24 @@ export const portfolioData: PortfolioData = {
     tagline: "Driving safety, quality, and productivity through loss elimination, CQV ownership, and shop-floor coaching.",
     summary: "Process Engineer with 5+ years of experience supporting high-volume manufacturing operations through process ownership, CQV (IQ/OQ/PQ), loss elimination, and operator capability building. Proven ability to partner with Operations, Maintenance, Quality, and Supply Chain to commission new equipment, stabilize production, and transition projects into reliable daily execution.",
     resume: "/resume.docx",
+  },
+  about: {
+    headline: "Engineering Excellence Through Continuous Improvement",
+    story: "With over 5 years of experience across manufacturing, and industrial environments, I specialize in improving production performance through data-driven process improvement and hands-on engineering support. My background spans analytical engineering work and on-site shop-floor leadership, allowing me to bridge the gap between theory and execution.I have led Lean and continuous improvement initiatives across multiple facilities, supporting equipment commissioning, process stabilization, and operator readiness. My approach is practical and results-focused—grounded in engineering fundamentals, structured problem-solving, and sustainable improvements that deliver measurable gains in safety, quality, and productivity.",
+    highlights: [
+      "5+ years engineering experience",
+      "Expertise in Lean Manufacturing & CI",
+      "Proficient in Power BI, Tableau, MATLAB, Python",
+      "Strong background in process validation (IQ/OQ/PQ)",
+      "Lean Six Sigma Green Belt",
+      "Certified in Tableau & Azure",
+    ],
+    values: [
+      "Continuous Improvement",
+      "Data-Driven Decisions",
+      "Operational Excellence",
+      "Team Empowerment",
+    ],
   },
   expertise: [
     {
@@ -94,6 +131,53 @@ export const portfolioData: PortfolioData = {
         "AutoCAD",
         "Python & MATLAB",
       ],
+    },
+  ],
+  projects: [
+    {
+      id: "cnc-commissioning",
+      title: "CNC & Panel Saw Commissioning",
+      category: "Process Validation",
+      description: "Led end-to-end commissioning and validation of major CNC and Panel saw installations through complete IQ/OQ/PQ protocols, ensuring industry-compliant process control and seamless production integration.",
+      technologies: ["IQ/OQ/PQ", "Process Validation", "Equipment Commissioning", "PFMEA"],
+      metrics: ["industry-compliant protocols", "Zero post-launch defects"],
+      roleId: "production-engineer",
+    },
+    {
+      id: "yield-improvement",
+      title: "Production Cell Yield Optimization",
+      category: "Lean Manufacturing",
+      description: "Achieved 55% yield improvement across 8 production cells through targeted Kaizen events, systematic root cause analysis, and implementation of visual management systems.",
+      technologies: ["Kaizen", "5S", "Visual Management", "Value Stream Mapping"],
+      metrics: ["55% yield improvement", "8 cells optimized"],
+      roleId: "ci-engineer-bristol",
+    },
+    {
+      id: "downtime-reduction",
+      title: "Coil Feed Mechanism Redesign",
+      category: "Process Improvement",
+      description: "Reduced machine downtime by 60% through complete redesign of coil feeding mechanism, implementing continuous supply standards to eliminate material starvation.",
+      technologies: ["Process Redesign", "Root Cause Analysis", "Standard Work"],
+      metrics: ["60% downtime reduction", "120 to 48 min/shift", "Sustained performance"],
+      roleId: "quality-aluminum",
+    },
+    {
+      id: "oee-improvement",
+      title: "OEE & Production Tracking System",
+      category: "Data Analytics",
+      description: "Developed comprehensive production reporting dashboard enabling data-driven prioritization of top downtime drivers, improving equipment OEE from 65% to 78%.",
+      technologies: ["KPI Development", "TPM", "Data Analytics", "Power BI"],
+      metrics: ["OEE: 65% → 78%", "On-time delivery: 78% → 90%", "18% fewer complaints"],
+      roleId: "ci-lead-clio",
+    },
+    {
+      id: "gear-mesh-research",
+      title: "Gear Mesh Stiffness Modeling",
+      category: "Research & Development",
+      description: "Developed and validated MATLAB-based analytical models for time-varying gear mesh stiffness in gas turbine applications, achieving 80% reduction in computation time.",
+      technologies: ["MATLAB", "ANSYS FEA", "Computational Modeling", "Research"],
+      metrics: ["80% faster computation", "10% error margin"],
+      roleId: "drdo-research",
     },
   ],
   certifications: [
@@ -141,11 +225,12 @@ export const portfolioData: PortfolioData = {
       title: "Production Engineer",
       company: "MJB Wood Group",
       logo: "/logos/mjb-wood.webp",
+      location: "Charlotte, NC",
       period: "Aug 2024 - Jan 2026",
       summary: "Spearheaded continuous improvement initiatives across fabrication and assembly operations, delivering measurable gains in equipment reliability, process stability, and on-time delivery through structured problem-solving and cross-functional collaboration.",
       highlights: [
-        "Commissioned and validated 3 major CNC and Panel saw installations through complete IQ/OQ/PQ protocols, ensuring FDA-compliant process control",
-        "Drove 15% improvement in effective production output by implementing disciplined RCA and CAPA methodologies across 12 production lines",
+        "Commissioned and validated major CNC and Panel saw installations through complete IQ/OQ/PQ protocols, ensuring industry-compliant process control",
+        "Drove 15% improvement in effective production output by implementing disciplined RCA and CAPA methodologies across multiple production lines",
         "Accelerated operator competency building by 30% through development of standardized SOPs, visual work instructions, and process flow maps",
         "Established comprehensive risk management framework including DFMEA, PFMEA, and PPAP documentation for both legacy and new product launches",
         "Partnered with Quality, Maintenance, and Supply Chain teams to reduce process variability and improve first-pass yield",
@@ -163,7 +248,7 @@ export const portfolioData: PortfolioData = {
       summary: "Led Lean Manufacturing transformation across CNC machining, assembly, and material handling operations, delivering breakthrough improvements in productivity, quality, and workplace safety through structured Kaizen events and CI governance.",
       highlights: [
         "Achieved 55% yield improvement across 8 production cells through targeted Kaizen events, eliminating root causes of rework and scrap",
-        "Reduced material waste by 25% ($180K annual savings) via process standardization and visual management implementation",
+        "Reduced material waste by 25% via process standardization and visual management implementation",
         "Established CI governance framework including weekly KPI reviews, post-implementation audits, and sustainability checks across 3 facilities",
         "Redesigned plant layouts with dedicated forklift traffic lanes and visual safety controls, resulting in zero safety incidents over 12 months",
         "Conducted comprehensive warehouse-wide RFID feasibility study, projecting 40% reduction in cycle count audit time",
@@ -183,7 +268,7 @@ export const portfolioData: PortfolioData = {
       highlights: [
         "Improved on-time delivery from 78% to 90% through implementation of in-process inspection controls and real-time production tracking",
         "Developed and deployed comprehensive production reporting dashboard, enabling data-driven prioritization of top 5 downtime drivers",
-        "Authored 15+ detailed SOPs covering machine setup, operation, changeover, and preventive maintenance procedures",
+        "Authored 40+ detailed SOPs covering machine setup, operation, changeover, and preventive maintenance procedures",
         "Created cost models for leadership decision-making on equipment investments, staffing optimization, and outsourcing analysis",
         "Led root cause analysis on recurring quality escapes, implementing corrective actions that reduced customer complaints by 18%",
         "Coordinated with Maintenance to establish TPM practices, improving equipment OEE from 65% to 78%",
@@ -196,6 +281,7 @@ export const portfolioData: PortfolioData = {
       title: "Continuous Improvement Intern",
       company: "Quality Aluminum Products",
       logo: "/logos/quality-aluminum.webp",
+      location: "Hastings, MI",
       period: "Oct 2021 - Feb 2022",
       summary: "Delivered high-impact process improvement project focused on eliminating equipment downtime and establishing operational standards for aluminum roofing sheet manufacturing operations.",
       highlights: [
@@ -212,9 +298,10 @@ export const portfolioData: PortfolioData = {
       title: "Research Assistant",
       company: "Gas Turbine Research Establishment (DRDO)",
       logo: "/logos/drdo.png",
+      location: "Bangalore, India",
       period: "Jan 2018 - Apr 2018",
       certificate: "/certificates/drdo-certificate.png",
-      summary: "Conducted advanced computational research on gear mesh stiffness modeling for aerospace gas turbine applications, developing optimized simulation methods to support design validation and performance prediction.",
+      summary: "Conducted advanced computational research on gear mesh stiffness modeling for gas turbine applications, developing optimized simulation methods to support design validation and performance prediction.",
       highlights: [
         "Developed and validated MATLAB-based analytical models for time-varying gear mesh stiffness in spur and helical gear systems",
         "Created ANSYS FEA simulation framework for gear tooth contact analysis under dynamic loading conditions",
@@ -229,6 +316,7 @@ export const portfolioData: PortfolioData = {
       title: "Manufacturing Intern",
       company: "Ford Motor Company",
       logo: "/logos/ford.png",
+      location: "Chennai, India",
       period: "2017",
       certificate: "/certificates/ford-certificate.png",
       summary: "Gained foundational exposure to world-class automotive manufacturing operations, observing safety protocols, quality systems, and continuous improvement practices in a high-volume production environment.",
@@ -236,7 +324,7 @@ export const portfolioData: PortfolioData = {
         "Supported manufacturing documentation and work instruction updates for assembly line operations",
         "Participated in quality inspection processes and learned GD&T principles for component verification",
         "Observed Kaizen events and lean manufacturing practices in action on the production floor",
-        "Collaborated with production engineers to understand process flow, takt time, and capacity planning concepts",
+        "Collaborated with production engineers to understand process flow and capacity planning concepts",
       ],
       skills: ["Manufacturing Operations", "Quality Inspection", "Technical Documentation", "Kaizen Observation", "GD&T Basics"],
     },

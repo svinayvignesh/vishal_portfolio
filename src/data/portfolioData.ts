@@ -182,6 +182,10 @@ export const portfolioData: PortfolioData = {
   ],
   certifications: [
     {
+      name: "SolidWorks CSWA",
+      link: "/certificates/solidworks-cswa.pdf",
+    },
+    {
       name: "Tableau Desktop Specialist",
       link: "https://www.credly.com/badges/b7bce271-d95a-4f51-9353-f4b1b2a4a938/linked_in_profile",
     },
@@ -192,10 +196,6 @@ export const portfolioData: PortfolioData = {
     {
       name: "AutoCAD Certified User",
       link: "https://www.credly.com/badges/5889ca21-7f4a-4df4-ae69-039febc71bfb?source=linked_in_profile",
-    },
-    {
-      name: "SolidWorks Essentials",
-      link: "https://www.linkedin.com/learning/certificates/a28f3d2bd8c8f58bcbb8782f02a2b36e1d63fdae8ba0919b368548a3adc4b857?trk=backfilled_certificate&lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_certifications_details%3BL21SuJ8PTW2Z4YYppd%2F%2F9Q%3D%3D",
     },
     {
       name: "CSSGB (Six Sigma Green Belt)",

@@ -73,7 +73,7 @@ export const portfolioData: PortfolioData = {
     title: "Process Engineer | Manufacturing & Continuous Improvement",
     tagline: "Driving safety, quality, and productivity through loss elimination, CQV ownership, and shop-floor coaching.",
     summary: "Process Engineer with 5+ years of experience supporting high-volume manufacturing operations through process ownership, CQV (IQ/OQ/PQ), loss elimination, and operator capability building. Proven ability to partner with Operations, Maintenance, Quality, and Supply Chain to commission new equipment, stabilize production, and transition projects into reliable daily execution.",
-    resume: "/resume.docx",
+    resume: "/resume.pdf",
   },
   about: {
     headline: "Engineering Excellence Through Continuous Improvement",

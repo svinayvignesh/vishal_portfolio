@@ -182,6 +182,10 @@ export const portfolioData: PortfolioData = {
   ],
   certifications: [
     {
+      name: "Project Management Professional (PMP)",
+      link: "/certificates/pmp-certificate.pdf",
+    },
+    {
       name: "SolidWorks CSWA",
       link: "/certificates/solidworks-cswa.pdf",
     },
